@@ -185,12 +185,25 @@ when run; use the REPL to test
 
 ;;; 1.27 alt (reworking functions above)
 (define (fermat-test-carmichael n a)
-  (= (expmod a n n) a))
+   (= (expmod-mr a n n) a))
 
-(define (fermat-carmichael n)
-  (define (iter a)
-    (cond ((= a 1) #t)
-          ((not (fermat-test-carmichael n a)) #f)
-          (else (iter (- a 1)))))
-  (iter (- n 1)))
+(define (fermat-full n)
+   (define (iter a)
+     (cond ((= a 1) #t)
+           ((not (fermat-test-carmichael n a)) #f)
+           (else (iter (- a 1)))))
+   (iter (- n 1)))
 
+;;; 1.28
+(define (square-check? m x)
+  (if (and (not (or (= x 1) (= x (- m 1))))
+           (= (remainder (square x) m) 1))
+      0
+      (remainder (square x) m)))
+
+(define (expmod-mr base exp m)
+  (cond ((= exp 0) 1)
+        ((even? exp)
+         (square-check? m (expmod-mr base (/ exp 2) m)))
+        (else
+         (remainder (* base (expmod-mr base (- exp 1) m)) m))))
