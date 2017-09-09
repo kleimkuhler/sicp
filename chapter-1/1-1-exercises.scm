@@ -16,6 +16,8 @@ when run; use the REPL to test
         ((even? exp) (remainder (square (expmod base (/ exp 2) m)) m))
         (else (remainder (* base (expmod base (- exp 1) m)) m))))
 
+(define (cube x) (* x x x))
+
 ;;; 1.3
 (define (sum-of-squares a b)
   (+ (square a) (square b)))
@@ -207,3 +209,23 @@ when run; use the REPL to test
          (square-check? m (expmod-mr base (/ exp 2) m)))
         (else
          (remainder (* base (expmod-mr base (- exp 1) m)) m))))
+
+;;; 1.29
+(define (sum term a next b)
+  (if (> a b)
+      0
+      (+ (term a)
+         (sum term (next a) next b))))
+
+(define (simpson f a b n)
+  (define h (/ (- b a) n))
+  (define (inc x) (+ x 1))
+  (define (y k)
+    (f (+ a (* k h))))
+  (define (term k)
+    (* (cond ((or (= k 0) (= k n)) 1)
+             ((even? k) 2)
+             (else 4))
+       (y k)))
+  (* (sum-iter term a inc n)
+     (/ h 3)))
