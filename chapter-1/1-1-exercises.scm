@@ -229,3 +229,16 @@ when run; use the REPL to test
        (y k)))
   (* (sum-iter term a inc n)
      (/ h 3)))
+
+;;; 1.30
+(define (sum-integers a b)
+  (define (inc x) (+ x 1))
+  (define (identity x) x)
+  (sum-iter identity a inc b))
+
+(define (sum-iter term a next b)
+  (define (iter a result)
+    (if (> a b)
+        result
+        (iter (next a) (+ (term a) result))))
+  (iter a 0))
