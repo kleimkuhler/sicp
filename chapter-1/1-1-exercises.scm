@@ -6,17 +6,21 @@ when run; use the REPL to test
 |#
 
 ;;; shared functions
-(define (square x) (* x x))
-
 (define (even? n)
     (= (remainder n 2) 0))
+
+(define (square x) (* x x))
+
+(define (cube x) (* x x x))
+
+(define (identity x) x)
+
+(define (inc x) (+ x 1))
 
 (define (expmod base exp m)
   (cond ((= exp 0) 1)
         ((even? exp) (remainder (square (expmod base (/ exp 2) m)) m))
         (else (remainder (* base (expmod base (- exp 1) m)) m))))
-
-(define (cube x) (* x x x))
 
 ;;; 1.3
 (define (sum-of-squares a b)
@@ -242,3 +246,80 @@ when run; use the REPL to test
         result
         (iter (next a) (+ (term a) result))))
   (iter a 0))
+
+;;; 1.31
+;;; iterative solution
+(define (product term a next b)
+  (define (iter a result)
+    (if (> a b)
+        result
+        (iter (next a) (* (term a ) result))))
+  (iter a 1))
+
+;;; recursive solution
+(define (product-recur term a next b)
+  (if (> a b)
+      1
+      (* (term a) (product-recur term (next a) next b))))
+
+(define (factorial n)
+  (product identity 1 inc n))
+
+;;; original solution
+(define (pi-product n)
+  (define (pi-term x)
+    (if (even? x)
+        (/ (+ x 2) (+ x 1.0))
+        (/ (+ x 1) (+ x 2.0))))
+  (* 4 (product pi-term 1 inc n)))
+
+;;; solution after learning wallis product had formula to calculate
+;;;   term n
+(define (wallis-product n)
+  (define (pi-term x)
+    (/ (* 4.0 (square x)) (- (* 4.0 (square x)) 1)))
+  (define (pi-next x) (+ x 1))
+  (* 2 (product pi-term 1 pi-next n)))
+
+;;; 1.32
+;;; iterative solution to a generic accumulator
+(define (accumulate combiner null-value term a next b)
+  (define (iter a result)
+    (if (> a b)
+        result
+        (iter (next a) (combiner (term a) result))))
+  (iter a null-value))
+
+;; recursive solution
+(define (accumulate-recur combiner null-value term a next b)
+  (if (> a b)
+      null-value
+      (combiner (term a)
+                (accumulate-recur combiner null-value term (next a) next b))))
+
+;;; wallis-product using accumulate instead of product of values
+(define (wallis-product-accumulate n)
+  (define (pi-term x)
+    (/ (* 4.0 (square x)) (- (* 4.0 (square x)) 1)))
+  (define (pi-next x) (+ x 1))
+  (* 2 (accumulate * 1 pi-term 1 pi-next n)))
+
+;;; 1.33
+;;; iterative solution to a filtered accumulator
+(define (filtered-accumulate filter combiner null-value term a next b)
+  (define (iter a result)
+    (cond ((> a b) result)
+          ((filter (term a)) (iter (next a) (combiner (term a) result)))
+          (else (iter (next a) (combiner null-value result)))))
+  (iter a null-value))
+
+(define (filtered-sum-evens a b)
+  (filtered-accumulate even? + 0 identity a inc b))
+
+#|
+(define (filtered-sum-squared-primes a b)
+  (filtered-accumulate prime? + 0 square a inc b))
+
+(define (filtered-product-relative-primes n)
+  (filtered-accumulate relatively-prime? * 1 identity 1 inc n))
+|#
