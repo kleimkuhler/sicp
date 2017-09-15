@@ -1,4 +1,4 @@
-#lang scheme
+#lang racket
 
 #|
 All functions are defined below. No executions take place
@@ -40,8 +40,7 @@ when run; use the REPL to test
 (define (sqrt-iter guess oldguess x) 
    (if (good-enough? guess oldguess) 
        guess 
-       (sqrt-iter (improve guess x) guess 
-                  x)))
+       (sqrt-iter (improve guess x) guess x)))
 
 (define (good-enough? guess oldguess) 
    (< (abs (- guess oldguess)) 
@@ -53,7 +52,7 @@ when run; use the REPL to test
 (define (average x y)
   (/ (+ x y) 2))
 
-(define (sqrt x)
+(define (sqrt-old-1 x)
   (sqrt-iter 1.0 2.0 x))
 
 ;;; 1.6
@@ -98,14 +97,14 @@ when run; use the REPL to test
   (expt-iter b n 1))
 
 ;;; 1.18
-(define (double x) (+ x x))
+(define (double-1-18 x) (+ x x))
 
 (define (halve x) (/ x 2))
 
 (define (mult cand plier)
   (define (mult-iter cand plier acc)
     (cond ((= plier 0) acc)
-          ((even? plier) (mult-iter (double cand) (halve plier) acc))
+          ((even? plier) (mult-iter (double-1-18 cand) (halve plier) acc))
           (else (mult-iter cand (- plier 1) (+ acc cand)))))
   (mult-iter cand plier 0))
 
@@ -165,7 +164,7 @@ when run; use the REPL to test
       (report-prime (- (current-inexact-milliseconds) start-time))))
 
 (define (report-prime elapsed-time)
-  (display " *** ")
+  (display " * ")
   (display elapsed-time))
 
 (define (search-for-primes start end)
@@ -309,17 +308,234 @@ when run; use the REPL to test
 (define (filtered-accumulate filter combiner null-value term a next b)
   (define (iter a result)
     (cond ((> a b) result)
-          ((filter (term a)) (iter (next a) (combiner (term a) result)))
+          ((filter a) (iter (next a) (combiner (term a) result)))
           (else (iter (next a) (combiner null-value result)))))
   (iter a null-value))
 
 (define (filtered-sum-evens a b)
   (filtered-accumulate even? + 0 identity a inc b))
 
-#|
-(define (filtered-sum-squared-primes a b)
+(define (sum-squared-primes a b)
   (filtered-accumulate prime? + 0 square a inc b))
 
-(define (filtered-product-relative-primes n)
-  (filtered-accumulate relatively-prime? * 1 identity 1 inc n))
+(define (product-relative-primes n)
+  (define (gcd a b)
+   (if (= b 0)
+       a
+       (gcd b (remainder a b))))
+  (define (coprime? x)
+    (= (gcd n x) 1))
+  (filtered-accumulate coprime? * 1 identity 1 inc (- n 1)))
+
+;;; following along with 1.3
+(define (f-define x y)
+  (define (f-helper a b)
+    (+ (* x (square a))
+       (* y b)
+       (* a b)))
+  (f-helper (+ 1 (* x y))
+            (- 1 y)))
+
+(define (f-lambda x y)
+  ((lambda (a b)
+     (+ (* x (square a))
+        (* y b)
+        (* a b)))
+   (+ 1 (* x y))
+   (- 1 y)))
+
+(define (f x y)
+  (let ((a (+ 1 (* x y)))
+        (b (- 1 y)))
+    (+ (* x (square a))
+       (* y b)
+       (* a b))))
+
+(define (search f neg-point pos-point)
+  (define (close-enough? x y) (< (abs (- x y)) 0.001))
+  (let ((midpoint (average neg-point pos-point)))
+    (if (close-enough? neg-point pos-point)
+        midpoint
+        (let ((test-value (f midpoint)))
+          (cond ((positive? test-value)
+                 (search f neg-point midpoint))
+                ((negative? test-value)
+                 (search f midpoint pos-point))
+                (else midpoint))))))
+
+(define (half-interval-method f a b)
+  (let ((a-value (f a))
+        (b-value (f b)))
+    (cond ((and (negative? a-value) (positive? b-value))
+           (search f a b))
+          ((and (negative? b-value) (positive? a-value))
+           (search f b a))
+          (else
+           (error "Values are not of opposite sign" a b)))))
+
+(define tolerance 0.00001)
+(define (fixed-point f first-guess)
+  (define (close-enough? v1 v2)
+    (< (abs (- v1 v2)) tolerance))
+  (define (try guess)
+    (let ((next (f guess)))
+      (if (close-enough? guess next)
+          next
+          (try next))))
+  (try first-guess))
+
+(define (sqrt-old-2 x)
+  (fixed-point (lambda (y) (average y (/ x y))) 1.0))
+
+;;; 1.35
+(define (fixed-point-gr)
+  (fixed-point (lambda (x) (average x (+ 1 (/ 1 x)))) 1.0))
+
+;;; 1.36
+(define (fixed-point-pretty f first-guess)
+  (define (close-enough? v1 v2)
+    (< (abs (- v1 v2)) tolerance))
+  (define (try guess)
+    (let ((next (f guess)))
+      (display guess)
+      (newline)
+      (if (close-enough? guess next)
+          next
+          (try next))))
+  (try first-guess))
+
+(define (fixed-point-x^x)
+  (fixed-point-pretty (lambda (x) (/ (log 1000) (log x))) 2.0))
+
+(define (fixed-point-x^x-average)
+  (fixed-point-pretty (lambda (x) (average x (/ (log 1000) (log x)))) 2.0))
+
+;;; 1.37
+;;; recursive solution with n & d procedures
+(define (cont-frac-recur n d k)
+  (define (frac i)
+    (if (< i k)
+        (/ (n i) (+ (d i) (frac (+ i 1))))
+        (/ (n i) (d i))))
+  (frac 1))
+
+;;; recursive solution with n & d as arguments
+;;; I feel unclear on why the exercise asks n & d to be passed in as
+;;;   procedures that always return 1.0, instead of how this does it
+(define (cont-frac-recur-test n d k)
+  (define (frac i)
+    (if (< i k)
+        (/ n (+ d (frac (+ i 1))))
+        (/ n d)))
+  (frac 1))
+
+;;; iterative solution
+;;; this solutions needs to sum up to i = 0 because of the iterative
+;;;   nature, it builds from the leaf nodes into the root
+(define (cont-frac-iter n d k)
+  (define (frac i result)
+    (if (= i 0)
+        result
+        (frac (- i 1) (/ (n i) (+ (d i) result)))))
+  (frac (- k 1) (/ (n k) (d k))))
+
+;;; 1.38
+(define (e k)
+  (+ 2 (cont-frac-iter
+        (lambda (i) 1.0)
+        (lambda (i)
+          (if (not (= 0 (remainder (+ i 1) 3)))
+              1
+              (* 2 (/ (+ i 1) 3))))
+        k)))
+
+;;; 1.39
+(define (tan-cf x k)
+  (cont-frac-iter
+   (lambda (i)
+     (if (= i 1)
+         x
+         (- (square x))))
+   (lambda (i)
+     (- (* i 2.0) 1.0))
+   k))
+
+;;; following along 1.3.4
+(define (average-damp f)
+  (lambda (x) (average x (f x))))
+
+(define (sqrt-old-3 x)
+  (fixed-point (average-damp (lambda (y) (/ x y)))
+               1.0))
+
+(define (cube-root x)
+  (fixed-point (average-damp (lambda (y) (/ x (square y))))
+               1.0))
+
+(define dx 0.00001)
+(define (deriv g)
+  (lambda (x) (/ (- (g (+ x dx)) (g x)) dx)))
+
+(define (newton-transform g)
+  (lambda (x) (- x (/ (g x) ((deriv g) x)))))
+(define (newtons-method g guess)
+  (fixed-point (newton-transform g) guess))
+
+(define (sqrt-old-4 x)
+  (newtons-method (lambda (y) (- (square y) x)) 1.0))
+
+(define (fixed-point-of-transform g transform guess)
+  (fixed-point (transform g) guess))
+
+(define (sqrt-avg-damp x)
+  (fixed-point-of-transform
+   (lambda (y) (/ x y))
+   average-damp
+   1.0))
+
+(define (sqrt-newton-trans x)
+  (fixed-point-of-transform
+   (lambda (y) (- (square y) x))
+   newton-transform
+   1.0))
+
+;;; 1.40
+(define (cubic a b c)
+  (lambda (x) (+ (cube x) (* a (square x)) (* b x) c)))
+
+(define (cubert a b c)
+  (newtons-method (cubic a b c) 1.0))
+
+#|
+;;; lambda implementation
+((lambda (a b c)
+     (newtons-method (lambda (x) (+ (cube x) (* a (square x)) (* b x) c)) 1.0))
+   1 2 3)
 |#
+
+;;; 1.41
+(define (double f)
+  (lambda (x) (f (f x))))
+
+;;; 1.42
+(define (compose f g)
+  (lambda (x) (f (g x))))
+
+;;; 1.43
+(define (repeated f n)
+  (if (= n 1)
+      f
+      (compose f (repeated f (- n 1)))))
+
+;;; 1.44
+(define (smooth f)
+  (lambda (x)
+    (/ (+ (f (- x dx))
+          (f x)
+          (f (+ x dx)))
+       3.0)))
+
+(define (n-fold-smooth f n)
+  ((repeated smooth n) f))
+
+;;; 1.45
