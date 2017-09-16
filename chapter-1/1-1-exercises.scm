@@ -5,7 +5,7 @@ All functions are defined below. No executions take place
 when run; use the REPL to test
 |#
 
-;;; shared functions
+;;; shared defines
 (define (even? n)
     (= (remainder n 2) 0))
 
@@ -21,6 +21,8 @@ when run; use the REPL to test
   (cond ((= exp 0) 1)
         ((even? exp) (remainder (square (expmod base (/ exp 2) m)) m))
         (else (remainder (* base (expmod base (- exp 1) m)) m))))
+
+(define tolerance 0.00001)
 
 ;;; 1.3
 (define (sum-of-squares a b)
@@ -373,7 +375,6 @@ when run; use the REPL to test
           (else
            (error "Values are not of opposite sign" a b)))))
 
-(define tolerance 0.00001)
 (define (fixed-point f first-guess)
   (define (close-enough? v1 v2)
     (< (abs (- v1 v2)) tolerance))
@@ -472,8 +473,8 @@ when run; use the REPL to test
   (fixed-point (average-damp (lambda (y) (/ x (square y))))
                1.0))
 
-(define dx 0.00001)
 (define (deriv g)
+  (define dx 0.00001)
   (lambda (x) (/ (- (g (+ x dx)) (g x)) dx)))
 
 (define (newton-transform g)
@@ -529,6 +530,7 @@ when run; use the REPL to test
 
 ;;; 1.44
 (define (smooth f)
+  (define dx 0.00001)
   (lambda (x)
     (/ (+ (f (- x dx))
           (f x)
@@ -539,3 +541,29 @@ when run; use the REPL to test
   ((repeated smooth n) f))
 
 ;;; 1.45
+(define (nth-root x n)
+  (define (log2 x)
+    (/ (log x) (log 2)))
+  (fixed-point
+   ((repeated average-damp (floor (log2 n)))
+    (lambda (y) (/ x (expt y (- n 1)))))
+   1.0))
+
+;;; 1.46
+(define (iterative-improve good-enough? improve)
+  (lambda (guess)
+    (if (good-enough? guess)
+        guess
+        ((iterative-improve good-enough? improve) (improve guess)))))
+
+(define (sqrt-iter-imp x)
+  ((iterative-improve
+    (lambda (guess) (< (abs (- (square guess) x)) tolerance))
+    (lambda (guess) (average guess (/ x guess))))
+   1.0))
+
+(define (fixed-point-iter-imp f first-guess)
+  ((iterative-improve
+    (lambda (guess) (< (abs (- (f guess) guess)) tolerance))
+    f)
+   first-guess))
