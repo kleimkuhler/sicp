@@ -1,11 +1,10 @@
 #lang racket
 
-#|
-All functions are defined below. No executions take place
-when run; use the REPL to test
-|#
+;; --------------------------------------------------
+;; All functions are defined below. No executions take place when
+;; run; use the REPL to test
 
-;;; shared defines
+;; Common defines used among exercises
 (define (even? n)
     (= (remainder n 2) 0))
 
@@ -24,7 +23,7 @@ when run; use the REPL to test
 
 (define tolerance 0.00001)
 
-;;; 1.3
+;; 1.3
 (define (sum-of-squares a b)
   (+ (square a) (square b)))
 
@@ -33,12 +32,13 @@ when run; use the REPL to test
         ((and (< b a) (< b c)) (sum-of-squares a c))
         ((and (< c a) (< c b)) (sum-of-squares a b))))
 
-;;; 1.4
+;; 1.4
 (define (a-plus-abs-b a b)
   ((if (> b 0) + -) a b))
 
-;;; 1.5
-;;; iterative approach to square root without any iterative constructs
+;; 1.5
+;; Solution to iterative approach without using any iterative
+;; constructs
 (define (sqrt-iter guess oldguess x) 
    (if (good-enough? guess oldguess) 
        guess 
@@ -57,8 +57,9 @@ when run; use the REPL to test
 (define (sqrt-old-1 x)
   (sqrt-iter 1.0 2.0 x))
 
-;;; 1.6
-;;; else-clause evaluates indefinitely because of applicative-order evaluation
+;; 1.6
+;; Show that else will continuously evaluate because of
+;; applicative-order evaluation
 (define (new-if predicate then-clause else-clause)
   (cond (predicate then-clause)
         (else else-clause)))
@@ -72,10 +73,10 @@ when run; use the REPL to test
 (define (sqrt-1.6 x)
   (sqrt-iter-1.6 1.0 x))
 
-;;; 1.7
-;;; fixed good-enough? to work for small/large numbers
+;; 1.7
+;; Fix good-enough? to work for small/large numbers
 
-;;; 1.10
+;; 1.10
 (define (A x y)
   (cond ((= y 0) 0)
         ((= x 0) (* 2 y))
@@ -83,14 +84,14 @@ when run; use the REPL to test
         (else (A (- x 1)
                  (A x (- y 1))))))
 
-;;; 1.11
+;; 1.11
 (define (f-recursive n)
   (cond ((< n 3) n)
         (else (+ (f-recursive (- n 1))
                  (* 2 (f-recursive (- n 2)))
                  (* 3 (f-recursive (- n 3)))))))
 
-;;; 1.16
+;; 1.16
 (define (expt b n)
   (define (expt-iter b n acc)
     (cond ((= n 0) acc)
@@ -98,7 +99,7 @@ when run; use the REPL to test
           (else (expt-iter b (- n 1) (* acc b)))))
   (expt-iter b n 1))
 
-;;; 1.18
+;; 1.18
 (define (double-1-18 x) (+ x x))
 
 (define (halve x) (/ x 2))
@@ -110,8 +111,9 @@ when run; use the REPL to test
           (else (mult-iter cand (- plier 1) (+ acc cand)))))
   (mult-iter cand plier 0))
 
-;;; 1.19
-;;; this was just realizing this was solving a systems of equations
+;; 1.19
+;; The solution here was realizing this was solving a systems of
+;; equations
 (define (fib n)
   (fib-iter 1 0 0 1 n))
 
@@ -129,7 +131,7 @@ when run; use the REPL to test
                         q
                         (- count 1)))))
 
-;;; Following along with 1.2.6
+;; Following along with 1.2.6
 (define (fermat-test n)
   (define (try-it a)
     (= (expmod a n n) a))
@@ -140,7 +142,7 @@ when run; use the REPL to test
         ((fermat-test n) (fast-prime? n (- times 1)))
         (else false)))
 
-;;; 1.21
+;; 1.21
 (define (smallest-divisor n)
   (find-divisor n 2))
 
@@ -155,7 +157,7 @@ when run; use the REPL to test
 (define (prime? n)
   (= n (smallest-divisor n)))
 
-;;; 1.22
+;; 1.22
 (define (timed-prime-test n)
   (newline)
   (display n)
@@ -175,11 +177,11 @@ when run; use the REPL to test
       (cond ((< start end) (timed-prime-test start)
                            (search-for-primes (+ start 2) end)))))
 
-;;; 1.23
+;; 1.23
 (define (next x)
   (if (= x 2) 3 (+ x 2)))
 
-;;; 1.27
+;; 1.27
 (define (mod-expt-equal? n a)
   (= (remainder (expt a n) n) a))
 
@@ -190,7 +192,7 @@ when run; use the REPL to test
           (else #f)))
   (cong-mod n 1))
 
-;;; 1.27 alt (reworking functions above)
+;; 1.27 alt (reworking functions above)
 (define (fermat-test-carmichael n a)
    (= (expmod-mr a n n) a))
 
@@ -201,7 +203,7 @@ when run; use the REPL to test
            (else (iter (- a 1)))))
    (iter (- n 1)))
 
-;;; 1.28
+;; 1.28
 (define (square-check? m x)
   (if (and (not (or (= x 1) (= x (- m 1))))
            (= (remainder (square x) m) 1))
@@ -215,7 +217,7 @@ when run; use the REPL to test
         (else
          (remainder (* base (expmod-mr base (- exp 1) m)) m))))
 
-;;; 1.29
+;; 1.29
 (define (sum term a next b)
   (if (> a b)
       0
@@ -235,7 +237,7 @@ when run; use the REPL to test
   (* (sum-iter term a inc n)
      (/ h 3)))
 
-;;; 1.30
+;; 1.30
 (define (sum-integers a b)
   (define (inc x) (+ x 1))
   (define (identity x) x)
@@ -248,8 +250,8 @@ when run; use the REPL to test
         (iter (next a) (+ (term a) result))))
   (iter a 0))
 
-;;; 1.31
-;;; iterative solution
+;; 1.31
+;; Iterative solution
 (define (product term a next b)
   (define (iter a result)
     (if (> a b)
@@ -257,7 +259,7 @@ when run; use the REPL to test
         (iter (next a) (* (term a ) result))))
   (iter a 1))
 
-;;; recursive solution
+;; Recursive solution
 (define (product-recur term a next b)
   (if (> a b)
       1
@@ -266,7 +268,7 @@ when run; use the REPL to test
 (define (factorial n)
   (product identity 1 inc n))
 
-;;; original solution
+;; Original solution
 (define (pi-product n)
   (define (pi-term x)
     (if (even? x)
@@ -274,16 +276,15 @@ when run; use the REPL to test
         (/ (+ x 1) (+ x 2.0))))
   (* 4 (product pi-term 1 inc n)))
 
-;;; solution after learning wallis product had formula to calculate
-;;;   term n
+;; Solve using the wallis product formula
 (define (wallis-product n)
   (define (pi-term x)
     (/ (* 4.0 (square x)) (- (* 4.0 (square x)) 1)))
   (define (pi-next x) (+ x 1))
   (* 2 (product pi-term 1 pi-next n)))
 
-;;; 1.32
-;;; iterative solution to a generic accumulator
+;; 1.32
+;; Iterative solution to a generic accumulator
 (define (accumulate combiner null-value term a next b)
   (define (iter a result)
     (if (> a b)
@@ -291,22 +292,22 @@ when run; use the REPL to test
         (iter (next a) (combiner (term a) result))))
   (iter a null-value))
 
-;; recursive solution
+;; Recursive solution
 (define (accumulate-recur combiner null-value term a next b)
   (if (> a b)
       null-value
       (combiner (term a)
                 (accumulate-recur combiner null-value term (next a) next b))))
 
-;;; wallis-product using accumulate instead of product of values
+;; Wallis-product using accumulate instead of product of values
 (define (wallis-product-accumulate n)
   (define (pi-term x)
     (/ (* 4.0 (square x)) (- (* 4.0 (square x)) 1)))
   (define (pi-next x) (+ x 1))
   (* 2 (accumulate * 1 pi-term 1 pi-next n)))
 
-;;; 1.33
-;;; iterative solution to a filtered accumulator
+;; 1.33
+;; Iterative solution to a filtered accumulator
 (define (filtered-accumulate filter combiner null-value term a next b)
   (define (iter a result)
     (cond ((> a b) result)
@@ -329,7 +330,7 @@ when run; use the REPL to test
     (= (gcd n x) 1))
   (filtered-accumulate coprime? * 1 identity 1 inc (- n 1)))
 
-;;; following along with 1.3
+;; Following along with 1.3
 (define (f-define x y)
   (define (f-helper a b)
     (+ (* x (square a))
@@ -388,11 +389,11 @@ when run; use the REPL to test
 (define (sqrt-old-2 x)
   (fixed-point (lambda (y) (average y (/ x y))) 1.0))
 
-;;; 1.35
+;; 1.35
 (define (fixed-point-gr)
   (fixed-point (lambda (x) (average x (+ 1 (/ 1 x)))) 1.0))
 
-;;; 1.36
+;; 1.36
 (define (fixed-point-pretty f first-guess)
   (define (close-enough? v1 v2)
     (< (abs (- v1 v2)) tolerance))
@@ -411,8 +412,8 @@ when run; use the REPL to test
 (define (fixed-point-x^x-average)
   (fixed-point-pretty (lambda (x) (average x (/ (log 1000) (log x)))) 2.0))
 
-;;; 1.37
-;;; recursive solution with n & d procedures
+;; 1.37
+;; Recursive solution with n & d procedures
 (define (cont-frac-recur n d k)
   (define (frac i)
     (if (< i k)
@@ -420,9 +421,12 @@ when run; use the REPL to test
         (/ (n i) (d i))))
   (frac 1))
 
-;;; recursive solution with n & d as arguments
-;;; I feel unclear on why the exercise asks n & d to be passed in as
-;;;   procedures that always return 1.0, instead of how this does it
+;; Recursive solution with n & d as arguments
+;; I feel unclear on why the exercise asks n & d to be passed in
+;; as procedures that always return 1.0, instead of how this does
+;; it
+;; After completing the following exercises - I see why this
+;; solution is best >_<
 (define (cont-frac-recur-test n d k)
   (define (frac i)
     (if (< i k)
@@ -430,9 +434,9 @@ when run; use the REPL to test
         (/ n d)))
   (frac 1))
 
-;;; iterative solution
-;;; this solutions needs to sum up to i = 0 because of the iterative
-;;;   nature, it builds from the leaf nodes into the root
+;; Iterative solution
+;; This solutions needs to sum up to i = 0 because of the
+;; iterative nature, it builds from the leaf nodes into the root
 (define (cont-frac-iter n d k)
   (define (frac i result)
     (if (= i 0)
@@ -440,7 +444,7 @@ when run; use the REPL to test
         (frac (- i 1) (/ (n i) (+ (d i) result)))))
   (frac (- k 1) (/ (n k) (d k))))
 
-;;; 1.38
+;; 1.38
 (define (e k)
   (+ 2 (cont-frac-iter
         (lambda (i) 1.0)
@@ -450,7 +454,7 @@ when run; use the REPL to test
               (* 2 (/ (+ i 1) 3))))
         k)))
 
-;;; 1.39
+;; 1.39
 (define (tan-cf x k)
   (cont-frac-iter
    (lambda (i)
@@ -461,7 +465,7 @@ when run; use the REPL to test
      (- (* i 2.0) 1.0))
    k))
 
-;;; following along 1.3.4
+;; Following along 1.3.4
 (define (average-damp f)
   (lambda (x) (average x (f x))))
 
@@ -500,35 +504,34 @@ when run; use the REPL to test
    newton-transform
    1.0))
 
-;;; 1.40
+;; 1.40
 (define (cubic a b c)
   (lambda (x) (+ (cube x) (* a (square x)) (* b x) c)))
 
 (define (cubert a b c)
   (newtons-method (cubic a b c) 1.0))
 
-#|
-;;; lambda implementation
-((lambda (a b c)
-     (newtons-method (lambda (x) (+ (cube x) (* a (square x)) (* b x) c)) 1.0))
-   1 2 3)
-|#
+;; --------------------------------------------------
+;; Lambda implementation
+;; ((lambda (a b c)
+;;     (newtons-method (lambda (x) (+ (cube x) (* a (square x)) (* b x) c)) 1.0))
+;;   1 2 3)
 
-;;; 1.41
+;; 1.41
 (define (double f)
   (lambda (x) (f (f x))))
 
-;;; 1.42
+;; 1.42
 (define (compose f g)
   (lambda (x) (f (g x))))
 
-;;; 1.43
+;; 1.43
 (define (repeated f n)
   (if (= n 1)
       f
       (compose f (repeated f (- n 1)))))
 
-;;; 1.44
+;; 1.44
 (define (smooth f)
   (define dx 0.00001)
   (lambda (x)
@@ -540,7 +543,7 @@ when run; use the REPL to test
 (define (n-fold-smooth f n)
   ((repeated smooth n) f))
 
-;;; 1.45
+;; 1.45
 (define (nth-root x n)
   (define (log2 x)
     (/ (log x) (log 2)))
@@ -549,7 +552,7 @@ when run; use the REPL to test
     (lambda (y) (/ x (expt y (- n 1)))))
    1.0))
 
-;;; 1.46
+;; 1.46
 (define (iterative-improve good-enough? improve)
   (lambda (guess)
     (if (good-enough? guess)
