@@ -3,12 +3,11 @@
 ;; --------------------------------------------------
 ;; Common defines used among exercises
 (define (gcd a b)
-  (if (= b 0.0)
+  (if (= b 0)
       (abs a)
       (gcd b (remainder a b))))
-
-(define (average a b)
-  (/ (+ a b) 2))
+(define (average a b) (/ (+ a b) 2))
+(define (inc x) (+ x 1))
 
 ;; --------------------------------------------------
 ;; Selector and Constructor procedures used in examples
@@ -120,8 +119,60 @@
   (largest-power z 3))
 
 ;; 2.6
-(define zero
+(define church-zero
   (lambda (f) (lambda (x) x)))
 
-(define (add-1 n)
+(define church-one
+  (lambda (f) (lambda (x) (f x))))
+
+(define church-two
+  (lambda (f) (lambda (x) (f (f x)))))
+
+(define (church-add-1 n)
   (lambda (f) (lambda (x) (f ((n f) x)))))
+
+(define (church-add m n)
+  (lambda (f) (lambda (x) ((m f) ((n f) x)))))
+
+
+;; Following along with reading
+;; Rp = (/ 1 (+ (/ 1 R1) (/ 1 R2)))
+(define (add-interval x y)
+  (make-interval (+ (lower-bound x) (lower-bound y))
+                 (+ (upper-bound x) (upper-bound y))))
+
+(define (mul-interval x y)
+  (let ((p1 (* (lower-bound x) (lower-bound y)))
+        (p2 (* (lower-bound x) (upper-bound y)))
+        (p3 (* (upper-bound x) (lower-bound y)))
+        (p4 (* (upper-bound x) (upper-bound y))))
+    (make-interval (min p1 p2 p3 p4)
+                   (max p2 p2 p3 p4))))
+
+;; 2.7
+(define (make-interval a b) (cons a b))
+(define (upper-bound int) (cdr int))
+(define (lower-bound int) (car int))
+
+;; 2.8
+(define (sub-interval x y)
+  (make-interval (- (lower-bound x) (upper-bound y))
+                 (- (upper-bound x) (lower-bound y))))
+
+;; 2.9
+;; Tests the width of intervals to assert that
+;; (= (+ (width a) (width b)) (width (add-interval a b)))
+(define (width int)
+  (/ (- (upper-bound int) (lower-bound int)) 2))
+
+;; 2.10
+(define (div-interval x y)
+  (if (and (<= (lower-bound y) 0) (>= (upper-bound y) 0))
+      (error "Error: The denominator can not span 0")
+      (mul-interval
+       x
+       (make-interval (/ 1.0 (upper-bound y))
+                      (/ 1.0 (lower-bound y))))))
+
+;; 2.11
+
