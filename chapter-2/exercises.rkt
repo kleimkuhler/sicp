@@ -162,7 +162,7 @@
 ;; 2.9
 ;; Tests the width of intervals to assert that
 ;; (= (+ (width a) (width b)) (width (add-interval a b)))
-(define (width int)
+(define (width-old int)
   (/ (- (upper-bound int) (lower-bound int)) 2))
 
 ;; 2.10
@@ -175,3 +175,133 @@
                       (/ 1.0 (lower-bound y))))))
 
 ;; 2.11
+(define (mul-interval-bitdiddle x y)
+  (let ((x-lo (lower-bound x))
+        (x-hi (upper-bound x))
+        (y-lo (lower-bound y))
+        (y-hi (upper-bound y)))
+    (cond ((and (>= x-lo 0)
+                (>= x-hi 0)
+                (>= y-lo 0)
+                (>= y-hi 0))
+           ;; (+.+)*(+.+)
+           (make-interval (* x-lo y-lo) (* x-hi y-hi)))
+          ((and (<= x-lo 0)
+                (>= x-hi 0)
+                (>= y-lo 0)
+                (>= y-hi 0))
+           ;; (-.+)*(+.+)
+           (make-interval (* x-lo y-hi) (* x-hi y-hi)))
+          ((and (<= x-lo 0)
+                (<= x-hi 0)
+                (>= y-lo 0)
+                (>= y-hi 0))
+           ;; (-.-)*(+.+)
+           (make-interval (* x-lo y-hi) (* x-hi y-lo)))
+          ((and (>= x-lo 0)
+                (>= x-hi 0)
+                (<= y-lo 0)
+                (>= y-hi 0))
+           ;; (+.+)*(-.+)
+           (make-interval (* x-hi y-lo) (* x-hi y-hi)))
+          ((and (>= x-lo 0)
+                (>= x-hi 0)
+                (<= y-lo 0)
+                (<= y-hi 0))
+           ;; (+.+)*(-.-)
+           (make-interval (* x-hi y-lo) (* x-lo y-hi)))
+          ((and (<= x-lo 0)
+                (>= x-hi 0)
+                (<= y-lo 0)
+                (>= y-hi 0))
+           ;; (-.+)*(-.+)
+           (make-interval (min (* x-lo y-hi) (* x-hi y-lo))
+                          (max (* x-lo y-lo) (* x-hi y-hi))))
+          ((and (<= x-lo 0)
+                (<= x-hi 0)
+                (<= y-lo 0)
+                (>= y-hi 0))
+           ;; (-.-)*(-.+)
+           (make-interval (* x-lo y-hi) (* x-lo y-lo)))
+          ((and (<= x-lo 0)
+                (>= x-hi 0)
+                (<= y-lo 0)
+                (<= y-hi 0))
+           ;; (-.+)*(-.-)
+           (make-interval (* x-hi y-lo) (* x-lo y-lo)))
+          ((and (<= x-lo 0)
+                (<= x-hi 0)
+                (<= y-lo 0)
+                (<= y-hi 0))
+           ;; (-.-)*(-.-)
+           (make-interval (* x-hi y-hi) (* x-lo y-lo))))))
+
+;; Following along with reading
+(define (make-center-width c w)
+  (make-interval (- c w) (+ c w)))
+
+(define (center i)
+  (/ (+ (lower-bound i) (upper-bound i)) 2))
+
+(define (width i)
+  (/ (- (upper-bound i) (lower-bound i)) 2))
+
+;; 2.12
+(define (make-center-percent c p)
+  (make-interval (* c (- 1.0 p)) (* c (+ 1.0 p))))
+
+(define (percent i)
+  (/ (width i) (center i)))
+
+;; 2.13
+;;  (/ (- (* (+ 1 pa) (+ 1 pb)) (* (- 1 pa) (- 1 pb)))
+;;     (+ (* (+ 1 pa) (+ 1 pb)) (* (- 1 pa) (- 1 pb))))
+;; where
+;;   pa = percentage tolerance of interval a
+;;   pb = percentage tolerance of interval b
+;; Assuming small enough percentages a more general estimation
+;; would be pa+pb
+
+;; Following along with reading
+(define (par1 r1 r2)
+  (div-interval (mul-interval r1 r2)
+                (add-interval r1 r2)))
+
+(define (par2 r1 r2)
+  (let ((one (make-interval 1 1)))
+    (div-interval one
+                  (add-interval (div-interval one r1)
+                                (div-interval one r2)))))
+
+;; 2.14 & 2.15
+;; The transformation from par2 to par1 requires multiplying by
+;; R1/R2 and R2/R2. However we prove that R1/R1 (and R2/R2) do
+;; not evaluate to 1, just an approximation of 1. Therefore par2
+;; is more accurate, but it is not possible to avoid this in
+;; cases where repetition is required
+
+;; Following along with reading
+(define (list-ref-cust items n)
+  (if (= n 0)
+      (car items)
+      (list-ref (cdr items) (- n 1))))
+
+(define squares (list 1 4 9 16 25))
+
+(define (length-recur items)
+  (if (null? items)
+      0
+      (+ 1 (length-recur (cdr items)))))
+(define (length-iter items)
+  (define (length-iter-ins a count)
+    (if (null? a)
+        count
+        (length-iter-ins (cdr a) (+ 1 count))))
+  (length-iter-ins items 0))
+
+(define odds (list 1 3 5 7))
+
+(define (append-cust list1 list2)
+  (if (null? list1)
+      list2
+      (cons (car list1) (append-cust (cdr list1) list2))))
