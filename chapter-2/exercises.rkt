@@ -305,3 +305,43 @@
   (if (null? list1)
       list2
       (cons (car list1) (append-cust (cdr list1) list2))))
+
+;; 2.17
+(define (last-pair-cust items)
+  (if (null? (cddr items))
+      (cdr items)
+      (last-pair-cust (cdr items))))
+
+;; 2.17 alt (need to explicited make result a list)
+(define (last-pair-cust-alt items)
+  (if (null? (cdr items))
+      (list (car items))
+      (last-pair-cust-alt (cdr items))))
+
+;; 2.18
+(define (reverse-cust items)
+  (define (reverse-cust-ins items result)
+    (if (null? items)
+        result
+        (reverse-cust-ins (cdr items) (cons (car items) result))))
+  (reverse-cust-ins items '()))
+
+;; 2.18 alt (recursive though)
+(define (reverse-cust-alt items)
+  (if (null? items)
+      items
+      (append (reverse-cust-alt (cdr items)) (list (car items)))))
+
+;; 2.19
+(define us-coins (list 50 25 10 5 1))
+
+(define (cc amount coin-values)
+  (cond ((= amount 0) 1)
+        ((or (< amount 0) (null? coin-values)) 0)
+        (else
+         (+ (cc amount (cdr coin-values))
+            (cc (- amount (car coin-values)) coin-values)))))
+
+;; 2.20
+
+  
