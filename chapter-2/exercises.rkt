@@ -343,5 +343,23 @@
             (cc (- amount (car coin-values)) coin-values)))))
 
 ;; 2.20
+(define (same-parity x . y)
+  (define (same-parity? f z result)
+    (if (null? z)
+        result
+        (if (f (car z))
+            (same-parity? f (cdr z) (append result (list (car z))))
+            (same-parity? f (cdr z) result))))
+  (if (even? x)
+      (same-parity? even? y (list x))
+      (same-parity? odd? y (list x))))
 
-  
+;; 2.20 alt
+(define (same-parity-alt x . y)
+  (define (iter items result)
+    (if (null? items)
+        result
+        (if (= (remainder x 2) (remainder (car items)  2))
+            (iter (cdr items) (append result (list (car items))))
+            (iter (cdr items) result))))
+  (iter y (list x)))
