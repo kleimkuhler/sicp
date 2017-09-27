@@ -363,3 +363,33 @@
             (iter (cdr items) (append result (list (car items))))
             (iter (cdr items) result))))
   (iter y (list x)))
+
+;; Following along with reading
+(define (scale-list items factor)
+  (map (lambda (x) (* x factor))
+       items))
+
+;; 2.21
+(define (square x) (* x x))
+(define (square-list-1 items)
+  (if (null? items)
+      '()
+      (cons (square (car items))
+            (square-list-1 (cdr items)))))
+
+(define (square-list-2 items)
+  (map square
+       items))
+
+;; 2.22
+(define (square-list-3 items)
+  (define (iter things answer)
+    (if (null? things)
+        answer
+        (iter (cdr things)
+              (append answer
+                      (list (square (car things)))))))
+  (iter items '()))
+
+;; 2.23
+
