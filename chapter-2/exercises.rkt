@@ -392,4 +392,14 @@
   (iter items '()))
 
 ;; 2.23
+(define (for-each-cust f items)
+  (if (null? items)
+      #t
+      (and (f (car items))
+           (for-each-cust f (cdr items)))))
 
+;; 2.23 alt
+(define (for-each-cust-alt f items)
+  (cond ((null? items) #t)
+        (else (f (car items))
+              (for-each-cust-alt f (cdr items)))))
