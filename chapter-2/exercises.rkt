@@ -403,3 +403,22 @@
   (cond ((null? items) #t)
         (else (f (car items))
               (for-each-cust-alt f (cdr items)))))
+
+;; Following along with reading
+(define (count-leaves x)
+  (cond ((null? x) 0)
+        ((not (pair? x)) 1)
+        (else (+ (count-leaves (car x))
+                  (count-leaves (cdr x))))))
+
+;; Exercises 2.24-26 done in REPL
+
+;; 2.27
+(define (deep-reverse items)
+  (cond ((null? items) '())
+        ((pair? (car items))
+         (append (deep-reverse (cdr items))
+                 (list (deep-reverse (car items)))))
+        (else
+         (append (deep-reverse (cdr items))
+                 (list (car items))))))
