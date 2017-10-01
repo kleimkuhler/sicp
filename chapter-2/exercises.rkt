@@ -8,6 +8,7 @@
       (gcd b (remainder a b))))
 (define (average a b) (/ (+ a b) 2))
 (define (inc x) (+ x 1))
+(define (square x) (* x x))
 
 ;; --------------------------------------------------
 ;; Selector and Constructor procedures used in examples
@@ -370,7 +371,6 @@
        items))
 
 ;; 2.21
-(define (square x) (* x x))
 (define (square-list-1 items)
   (if (null? items)
       '()
@@ -422,3 +422,106 @@
         (else
          (append (deep-reverse (cdr items))
                  (list (car items))))))
+
+;; 2.28
+(define (fringe items)
+  (cond ((null? items) '())
+        ((pair? (car items))
+         (append (fringe (car items))
+                 (fringe (cdr items))))
+        (else items)))
+
+;; 2.29
+(define (make-mobile left right)
+  (list left right))
+
+(define (make-branch length structure)
+  (list length structure))
+
+(define (left-branch mobile)
+  (car mobile))
+
+(define (right-branch mobile)
+  (car (cdr mobile)))
+
+(define (branch-length branch)
+  (car branch))
+
+(define (branch-structure branch)
+  (car (cdr branch)))
+
+(define (branch-weight branch)
+  (if (pair? (branch-structure branch))
+      (total-weight (branch-structure branch))
+      (branch-structure branch)))
+
+(define (total-weight mobile)
+  (+ (branch-weight (left-branch mobile))
+     (branch-weight (right-branch mobile))))
+
+(define (branch-torque branch)
+  (* (branch-length branch) (branch-weight branch)))
+
+(define (branch-balanced? branch)
+  (if (pair? (branch-structure branch))
+      (balanced? (branch-structure branch))
+      #t))
+
+(define (balanced? mobile)
+  (and (= (branch-torque (left-branch mobile))
+          (branch-torque (right-branch mobile)))
+       (branch-balanced? (left-branch mobile))
+       (branch-balanced? (right-branch mobile))))
+
+;; 2.29 d.
+;; Only changes are
+;;   (define (right-branch mobile)
+;;     (cdr mobile))
+;;   (define (branch-structure branch)
+;;     (cdr branch))
+
+;; Following along with reading
+(define (scale-tree-1 tree factor)
+  (cond ((null? tree) '())
+        ((not (pair? tree)) (* tree factor))
+        (else (cons (scale-tree-1 (car tree) factor)
+                    (scale-tree-1 (cdr tree) factor)))))
+
+(define (scale-tree-2 tree factor)
+  (map (lambda (sub-tree)
+         (if (pair? sub-tree)
+             (scale-tree-2 sub-tree factor)
+             (* sub-tree factor)))
+       tree))
+
+;; 2.30
+(define (square-tree-direct tree)
+  (cond ((null? tree) '())
+        ((not (pair? tree)) (square tree))
+        (else (cons (square-tree-direct (car tree))
+                    (square-tree-direct (cdr tree))))))
+
+(define (square-tree-map-old tree)
+  (map (lambda (sub-tree)
+         (if (pair? sub-tree)
+             (square-tree-map-old sub-tree)
+             (square sub-tree)))
+       tree))
+
+;; 2.31
+(define (tree-map f tree)
+  (map (lambda (sub-tree)
+         (if (pair? sub-tree)
+             (tree-map f sub-tree)
+             (f sub-tree)))
+       tree))
+
+(define (square-tree tree)
+  (tree-map square tree))
+
+;; 2.32
+(define (subsets s)
+  (if (null? s)
+      (list '())
+      (let ((rest (subsets (cdr s))))
+        (append rest (map (lambda (x) (cons (car s) x)) rest)))))
