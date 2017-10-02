@@ -74,5 +74,7 @@
 (define (reverse-left sequence)
   (fold-left (lambda (x y) (append (list y)  x)) '() sequence))
 
+;; On further thought, this is the better solution to
+;; reverse-left since I am building from right to left
 (define (reverse-left-alt sequence)
   (fold-left (lambda (x y) (cons y x)) '() sequence))
