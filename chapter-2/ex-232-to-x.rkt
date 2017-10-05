@@ -7,6 +7,17 @@
       (op (car sequence)
           (accumulate op initial (cdr sequence)))))
 
+(define (enumerate-interval lo hi)
+  (if (> lo hi)
+      '()
+      (cons lo (enumerate-interval (+ lo 1) hi))))
+
+(define (enumerate-tree tree)
+  (cond ((null? tree) '())
+        ((not (pair? tree)) (list tree))
+        (else (append (enumerate-tree (car tree))
+                      (enumerate-tree (cdr tree))))))
+
 ;; 2.33
 (define (map-cust p sequence)
   (accumulate (lambda (x y) (cons (p x) y)) '() sequence))
@@ -33,6 +44,13 @@
                          (count-leaves sub-tree)
                          1))
                    t)))
+
+;; 2.35 (alt with enumerate tree)
+(define (count-leaves-alt t)
+  (accumulate +
+              0
+              (map (lambda (x) 1)
+                   (enumerate-tree t))))
 
 ;; 2.36
 (define (accumulate-n op init seqs)
@@ -80,10 +98,11 @@
   (fold-left (lambda (x y) (cons y x)) '() sequence))
 
 ;; Following along with reading
-(define (square x) (* x x))
+(define (flatmap proc seq)
+  (accumulate append '() (map proc seq)))
 
-(define (next x)
-  (if (= x 2) 3 (+ x 2)))
+;; Elementary implementation of prime? for example
+(define (square x) (* x x))
 
 (define (smallest-divisor n)
   (find-divisor n 2))
@@ -91,7 +110,7 @@
 (define (find-divisor n test-divisor)
   (cond ((> (square test-divisor) n) n)
         ((divides? test-divisor n) test-divisor)
-        (else (find-divisor n (next test-divisor)))))
+        (else (find-divisor n (+ n 1)))))
 
 (define (divides? a b)
   (= (remainder b a) 0))
@@ -99,36 +118,62 @@
 (define (prime? n)
   (= n (smallest-divisor n)))
 
-(define (enumerate-interval low high)
-  (if (> low high)
-      '()
-      (cons low (enumerate-interval (+ low 1) high))))
-
-(define (flatmap proc seq)
-  (accumulate append '() (map proc seq)))
-
+;; Continuing reading
 (define (prime-sum? pair)
   (prime? (+ (car pair) (cadr pair))))
 
 (define (make-pair-sum pair)
   (list (car pair) (cadr pair) (+ (car pair) (cadr pair))))
 
-(define (prime-sum-pairs n)
+(define (prime-sum-pairs-old n)
   (map make-pair-sum
-       (filter prime-sum? (flatmap
-                           (lambda (i)
-                             (map (lambda (j) (list i j))
-                                  (enumerate-interval 1 (- i 1))))
-                           (enumerate-interval 1 n)))))
+       (filter prime-sum?
+               (flatmap
+                (lambda (i)
+                  (map (lambda (j) (list i j))
+                       (enumerate-interval 1 (- i 1))))
+                (enumerate-interval 1 n)))))
 
-(define (remove item sequence)
+(define (remove item s)
   (filter (lambda (x) (not (= x item)))
-          sequence))
+          s))
 
+;; Why '() when if > '() instead of (list '())
 (define (permutations s)
   (if (null? s)
       (list '())
       (flatmap (lambda (x)
-                 (map (lambda (p) (cons x p))
+                 (map (lambda (y) (cons x y))
                       (permutations (remove x s))))
                s)))
+
+;; 2.40
+(define (unique-pairs n)
+  (flatmap (lambda (x)
+             (map (lambda (y) (list x y))
+                  (enumerate-interval 1 (- x 1))))
+           (enumerate-interval 1 n)))
+
+(define (prime-sum-pairs n)
+  (map make-pair-sum
+       (filter prime-sum? (unique-pairs n))))
+
+;; 2.41
+;; Originally had car, cadr and caddr
+(define (make-triple triple)
+  (append triple (list (accumulate + 0 triple))))
+
+(define (unique-ordered-triples n)
+  (flatmap (lambda (i)
+             (flatmap (lambda (j)
+                        (map (lambda (k)
+                               (list i j k))
+                             (enumerate-interval 1 (- j 1))))
+                      (enumerate-interval 1 (- i 1))))
+           (enumerate-interval 1 n)))
+
+(define (ordered-triple-sums n s)
+  (define (triple-sum? triple)
+    (= s (accumulate + 0 triple)))
+  (map make-triple
+       (filter triple-sum? (unique-ordered-triples n))))
