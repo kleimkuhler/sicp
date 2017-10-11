@@ -177,3 +177,39 @@
     (= s (accumulate + 0 triple)))
   (map make-triple
        (filter triple-sum? (unique-ordered-triples n))))
+
+;; 2.42
+(define empty-board '())
+
+(define (adjoin-position new-row k rest-of-queens)
+  (cons (cons new-row k) rest-of-queens))
+
+;; safe v1
+(define (safe-v1? k positions)
+  (define (safe-row?)
+    (null? (filter
+            (lambda (pos)
+              (= (caar positions) (car pos)))
+            (cdr positions))))
+  (define (safe-diag?)
+    (null? (filter
+            (lambda (pos)
+              (= (abs (- (caar positions) (car pos)))
+                 (abs (- (cdar positions) (cdr pos)))))
+            (cdr positions))))
+  (and (safe-row?) (safe-diag?)))
+
+(define (queens board-size)
+  (define (queen-cols k)
+    (if (= k 0)
+        (list empty-board)
+        (filter
+         (lambda (positions) (safe-v1? k positions))
+         (flatmap
+          (lambda (rest-of-queens)
+            (map (lambda (new-row)
+                   (adjoin-position
+                    new-row k rest-of-queens))
+                 (enumerate-interval 1 board-size)))
+          (queen-cols (- k 1))))))
+  (queen-cols board-size))
