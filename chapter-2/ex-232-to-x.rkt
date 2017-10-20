@@ -213,3 +213,136 @@
                  (enumerate-interval 1 board-size)))
           (queen-cols (- k 1))))))
   (queen-cols board-size))
+
+;; 2.44
+;; Commented out because beside/below is not defined
+;; (define (up-split painter n)
+;;   (if (= n 0)
+;;       painter
+;;       (let ((smaller (up-split painter (- n 1))))
+;;         (below painter (beside smaller smaller)))))
+
+;; 2.45
+;; Comment out because beside/below is not defined
+;; (define (right-split (split beside below)))
+;; (define (up-split (split below beside)))
+;;
+;; (define (split large small)
+;;   (lambda (painter n)
+;;     (if (= n 0)
+;;         painter
+;;         (let ((smaller ((split large small) painter (- n 1))))
+;;           (large painter (small smaller smaller)))))
+
+;; 2.46
+(define (make-vect x y)
+  (cons x y))
+(define (xcor-vect v) (car v))
+(define (ycor-vect v) (cdr v))
+
+(define (add-vect v1 v2)
+  (cons (+ (xcor-vect v1) (xcor-vect v2))
+        (+ (ycor-vect v1) (ycor-vect v2))))
+(define (sub-vect v1 v2)
+  (cons (- (xcor-vect v1) (xcor-vect v2))
+        (- (ycor-vect v1) (ycor-vect v2))))
+(define (scale-vect v s)
+  (cons (* s (xcor-vect v))
+        (* s (ycor-vect v))))
+
+;; 2.47
+(define (make-frame-list origin edge1 edge2)
+  (list origin edge1 edge2))
+(define (make-frame-cons origin edge1 edge2)
+  (cons origin (cons edge1 edge2)))
+
+(define (origin-frame frame)
+  (car frame))
+(define (edge1-frame frame)
+  (cadr frame))
+(define (edge2-frame frame)
+  (caddr frame))
+
+(define (origin-frame-c frame)
+  (car frame))
+(define (edge1-frame-c frame)
+  (cadr frame))
+(define (edge2-frame-c frame)
+  (cddr frame))
+
+;; Following along with reading
+(define (frame-coord-map frame)
+  (lambda (v)
+    (add-vect
+     (origin-frame frame)
+     (add-vect (scale-vect (xcor-vect v) (edge1-frame frame))
+               (scale-vect (ycor-vect v) (edge2-frame frame))))))
+
+(define (segments->painter segment-list)
+  (lambda (frame)
+    (for-each
+     (lambda (segment)
+       (draw-line
+        ((frame-coord-map frame) (start-segment segment))
+        ((frame-coord-map frame) (end-segment segment))))
+     segment-list)))
+
+;; 2.48
+(define (make-segment v1 v2)
+  (cons v1 v2))
+(define (start-segment seg)
+  (car seg))
+(define (end-segment seg)
+  (cdr seg))
+
+;; 2.49
+(define (outline->painter frame)
+  (let ((tl (add-vect (origin-frame frame)
+                      (edge1-frame frame)))
+        (tr (add-vect (origin-frame frame)
+                      (add-vect (edge1-frame frame)
+                                (edge2-frame frame))))
+        (br (add-vect (origin-frame frame)
+                      (edge2-frame frame)))
+        (bl (origin-frame frame)))
+    (segments->painter
+     (list
+      (make-segment tl tr)
+      (make-segment tr br)
+      (make-segment br bl)
+      (make-segment bl tl)))))
+
+(define (x->painter frame)
+  (let ((tl (add-vect (origin-frame frame)
+                      (edge1-frame frame)))
+        (tr (add-vect (origin-frame frame)
+                      (add-vect (edge1-frame frame)
+                                (edge2-frame frame))))
+        (br (add-vect (origin-frame frame)
+                      (edge2-frame frame)))
+        (bl (origin-frame frame)))
+    (segments->painter
+     (list
+      (make-segment tl br)
+      (make-segment tr bl)))))
+
+(define (diamond->painter frame)
+  (let ((tl (add-vect (origin-frame frame)
+                      (scale-vect (edge1-frame frame) .5)))
+        (tr (add-vect (origin-frame frame)
+                      (add-vect (edge1-frame frame)
+                                (scale-vect (edge2-frame frame) .5))))
+        (br (add-vect (origin-frame frame)
+                      (add-vect (edge2-frame frame)
+                                (scale-vect (edge1-frame frame) .5))))
+        (bl (add-vect (origin-frame frame)
+                      (scale-vect (edge2-frame frame) .5))))
+    (segements->painter
+     (list
+      (make-segment tl tr)
+      (make-segment tr br)
+      (make-segment br bl)
+      (make-segment bl tl)))))
+
+;; 2.50
+
