@@ -337,12 +337,16 @@
                                 (scale-vect (edge1-frame frame) .5))))
         (bl (add-vect (origin-frame frame)
                       (scale-vect (edge2-frame frame) .5))))
-    (segements->painter
+    (segments->painter
      (list
       (make-segment tl tr)
       (make-segment tr br)
       (make-segment br bl)
       (make-segment bl tl)))))
 
-;; 2.50
-
+;; 2.50 - 2.52
+;; I solved these out on paper but the actual implementations
+;; felt like busy work since it really was not that complicated.
+;; There appears to be a packet that has the actual draw-line
+;; function would could be helpful but for working through this
+;; book to learn concepts, this did not feel like time well spent.
