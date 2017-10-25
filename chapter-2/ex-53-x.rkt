@@ -107,19 +107,19 @@
 (define (multiplicand a) (caddr a))
 
 ;; Following along with reading
-(define (element-of-set? a set)
+(define (element-of-set-unordered? a set)
   (cond ((null? set) #f)
         ((equal? a (car set)) #t)
-        (else (element-of-set? a (cdr set)))))
+        (else (element-of-set-unordered? a (cdr set)))))
 
 (define (adjoin-set a set)
-  (if (element-of-set? a set)
+  (if (element-of-set-unordered? a set)
       set
       (cons a set)))
 
 (define (intersection-set a b)
   (cond ((or (null? a) (null? b)) '())
-        ((element-of-set? (car a) b) (cons (car a) (intersection-set (cdr a) b)))
+        ((element-of-set-unordered? (car a) b) (cons (car a) (intersection-set (cdr a) b)))
         (else (intersection-set (cdr a) b))))
 
 ;; 2.59
@@ -139,7 +139,7 @@
   (accumulate adjoin-set b a))
 
 ;; 2.60
-;; element-of-set? remains
+;; element-of-set-unordered? remains
 ;; intersection-set can remain. Duplicates show when given in
 ;; first set. Technically the sets are equal whether there are
 ;; duplicates or not, so this shouldn't matter
@@ -147,4 +147,83 @@
 
 (define (union-set-dup a b) (append a b))
 
+;; Following along with reading
+(define (element-of-set-ordered? a set)
+  (cond ((null? set) #f)
+        ((equal? a (car set)) #t)
+        ((< a (car set)) #f)
+        (else (element-of-set-ordered? a (cdr set)))))
+
+(define (intersection-set-ordered a b)
+  (if (or (null? a) (null? b))
+      '()
+      (let ((c (car a)) (d (car b)))
+        (cond ((= c d)
+               (cons c (intersection-set-ordered (cdr a)
+                                                 (cdr b))))
+              ((< c d) (intersection-set-ordered (cdr a) b))
+              ((> c d) (intersection-set-ordered a (cdr b)))))))
 ;; 2.61
+;; Implement with element-of-set-ordered?
+;; I really really don't like this but this is what first came to mind D:
+(define (adjoin-set-ordered-eos a set)
+  (define (insert a initial set)
+    (if (< a (car set))
+        (append (append initial (list a)) set)
+        (insert a (append initial (list (car set))) (cdr set))))
+  (if (element-of-set-ordered? a set)
+      set
+      (insert a '() set)))
+
+(define (adjoin-set-ordered a set)
+  (cond ((null? set) (list a))
+        ((= a (car set)) set)
+        ((< a (car set)) (cons a set))
+        (else (cons (car set) (adjoin-set-ordered a (cdr set))))))
+
+;; 2.62
+;; This is not theta(n)
+(define (union-set-ordered-acc a b)
+  (accumulate adjoin-set-ordered b a))
+
+;; Realize this is a merge from mergesort and you get theta(n)
+;; time
+(define (union-set-ordered a b)
+  (cond ((null? a) b)
+        ((null? b) a)
+        ((= (car a) (car b))
+         (cons (car a) (union-set-ordered (cdr a) (cdr b))))
+        ((< (car a) (car b))
+         (cons (car a) (union-set-ordered (cdr a) b)))
+        (else
+         (cons (car b) (union-set-ordered a (cdr b))))))
+
+;; Following along with reading
+(define (entry tree) (car tree))
+(define (left-branch tree) (cadr tree))
+(define (right-branch tree) (caddr tree))
+(define (make-tree entry left right)
+  (list entry left right))
+
+(define (tree-element-of-set? a set)
+  (cond ((null? set) #f)
+        ((= a (entry set)) #t)
+        ((< a (entry set))
+         (tree-element-of-set? a (left-branch set)))
+        (else
+         (tree-element-of-set? a (right-branch set)))))
+
+(define (tree-adjoin-set a set)
+  (cond ((null? set) (make-tree a '() '()))
+        ((= a (entry set)) set)
+        ((< a (entry set))
+         (make-tree (entry set)
+                    (adjoin-set a (left-branch set))
+                    (right-branch set)))
+        (else
+         (make-tree (entry set)
+                    (left-branch set)
+                    (adjoin-set a (right-branch set))))))
+
+;; 2.63
+
