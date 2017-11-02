@@ -226,4 +226,85 @@
                     (adjoin-set a (right-branch set))))))
 
 ;; 2.63
+(define (tree->list-1 tree)
+  (if (null? tree)
+      '()
+      (append (tree->list-1 (left-branch tree))
+              (cons (entry tree)
+                    (tree->list-1
+                     (right-branch tree))))))
 
+(define (tree->list-2 tree)
+  (define (copy-to-list tree result-list)
+    (if (null? tree)
+        result-list
+        (copy-to-list (left-branch tree)
+                      (cons (entry tree)
+                            (copy-to-list
+                             (right-branch tree)
+                             result-list)))))
+  (copy-to-list tree '()))
+
+;; Balanced tree (same answer)
+;; (define tree-1 ('(4 (2 (1 () ()) (3 () ())) (6 (5 () ()) (7 () ())))))
+;; Unbalanced tree (same answer)
+;; (define tree-2 '(4 (2 (1 () ()) (3 () ())) (7 (6 (5 () ()) ()) (8 () ()))))
+
+;; List 1 2 3 from figure 2.16
+;; (define tree1 '(7 (3 (1 () ()) (5 () ())) (9 () (11 () ()))))
+;; (define tree2 '(3 (1 () ()) (7 (5 () ()) (9 () (11 () ())))))
+;; (define tree3 '(5 (3 (1 () ()) ()) (9 (7 () ()) (11 () ()))))
+
+;; Master Theorem
+;; tree->list-1: 2T(n/2) + O(n/2) -> O(nlogn)
+;; tree->list-2: 2T(n/2) + O(1) -> O(n)
+
+;; Following along with reading
+(define (list->tree elements)
+  (car (partial-tree elements (length elements))))
+(define (partial-tree elts n)
+  (if (= n 0)
+      (cons '() elts)
+      (let ((left-size (quotient (- n 1) 2)))
+        (let ((left-result
+               (partial-tree elts left-size)))
+          (let ((left-tree (car left-result))
+                (non-left-elts (cdr left-result))
+                (right-size (- n (+ left-size 1))))
+            (let ((this-entry (car non-left-elts))
+                  (right-result
+                   (partial-tree
+                    (cdr non-left-elts)
+                    right-size)))
+              (let ((right-tree (car right-result))
+                    (remaining-elts
+                     (cdr right-result)))
+                (cons (make-tree this-entry
+                                 left-tree
+                                 right-tree)
+                      remaining-elts))))))))
+
+
+;; 2.64
+;; (partial-tree '(1 3 5 7 9 11) 6)
+;;   (partial-tree '(1 3 5 7 9 11) 2)
+;;     (partial-tree '(1 3 5 7 9 11) 0) -> cons ('() '(1 3 5 7 9 11))
+;;   -> left-tree = '(); non-left-elts = '(1 3 5 7 9 11); right-size = 3
+;;     -> this-entry = 1; right-result = (partial-tree '(3 5 7 9 11) 3)
+;;       -> (cons (make-tree '(1) '() '(3)) '(5 7 9 11))
+;; The final line of this is correct. In the tree constructed, the left branch
+;; should be '(1 () (3 () ()))
+;; Same runtime as above implementation 2 -> O(n)
+
+;; 2.65
+;; union-set and interesection-set of lists are O(n). Because we can create an
+;; ordered list with 2.64 in O(n), we can use that to then implement the
+;; existing union-set and intersection-set
+(define (union-set-bb-tree a b)
+  (list->tree (union-set-ordered
+               (tree->list-2 a)
+               (tree->list-2 b))))
+(define (intersection-set-bb-tree a b)
+  (list->tree (intersection-set-ordered
+               (tree->list-2 a)
+               (tree->list-2 b))))
