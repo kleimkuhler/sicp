@@ -111,3 +111,29 @@
                                     (cddr pairs)))))
 
 ;; 2.70
+(define song
+  (generate-huffman-tree '((A 2) (GET 2) (SHA 3) (WAH 1) (BOOM 1)
+                                 (JOB 2) (NA 16) (YIP 9))))
+
+;; (length (encode '(GET A JOB
+;;                       SHA NA NA NA NA NA NA NA NA
+;;                       GET A JOB
+;;                       SHA NA NA NA NA NA NA NA NA
+;;                       WAH YIP YIP YIP YIP YIP YIP YIP YIP YIP
+;;                       SHA BOOM)
+;;                 song))
+;; The above yields 84 bits
+;; Fixed length would be 3 * 36 (words) = 108 bits
+
+;; 2.71
+;; n = 5 tree => 1 bit for most frequent & 4 bit for most infrequent
+;; For a 2^n-1 frequency, you will need n-1 bits for most infrequent symbol
+
+;; 2.72
+;; Page 14
+;; Most frequent = O(n) because you must search the list of symbols once
+;; - O(1) retrieval
+;; Least frequent = O(nn) because you must search the list of symbols once
+;; per node with at most n-1 searches.
+;; - O(1) retrieval
+
