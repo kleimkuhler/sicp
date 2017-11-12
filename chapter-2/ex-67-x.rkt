@@ -197,32 +197,158 @@
 (define (make-from-mag-ang-pol r a)
   (attach-tag 'polar (cons r a)))
 
-(define (real-part z)
-  (cond ((rectangular? z)
-         (real-part-rec (contents z)))
-        ((polar? z)
-         (real-part-pol (contents z)))
-        (else (error "Unknown type: REAL-PART" z))))
-(define (imag-part z)
-  (cond ((rectangular? z)
-         (imag-part-rec (contents z)))
-        ((polar? z)
-         (imag-part-pol (contents z)))
-        (else (error "Unknown type: IMAG-PART" z))))
-(define (magnitude z)
-  (cond ((rectangular? z)
-         (magnitude-rec (contents z)))
-        ((polar? z)
-         (magnitude-pol (contents z)))
-        (else (error "Unknown type: MAGNITUDE" z))))
-(define (angle z)
-  (cond ((rectangular? z)
-         (angle-rec (contents z)))
-        ((polar? z)
-         (angle-pol (contents z)))
-        (else (error "Unknown type: ANGLE" z))))
+;; (define (real-part z)
+;;   (cond ((rectangular? z)
+;;          (real-part-rec (contents z)))
+;;         ((polar? z)
+;;          (real-part-pol (contents z)))
+;;         (else (error "Unknown type: REAL-PART" z))))
+;; (define (imag-part z)
+;;   (cond ((rectangular? z)
+;;          (imag-part-rec (contents z)))
+;;         ((polar? z)
+;;          (imag-part-pol (contents z)))
+;;         (else (error "Unknown type: IMAG-PART" z))))
+;; (define (magnitude z)
+;;   (cond ((rectangular? z)
+;;          (magnitude-rec (contents z)))
+;;         ((polar? z)
+;;          (magnitude-pol (contents z)))
+;;         (else (error "Unknown type: MAGNITUDE" z))))
+;; (define (angle z)
+;;   (cond ((rectangular? z)
+;;          (angle-rec (contents z)))
+;;         ((polar? z)
+;;          (angle-pol (contents z)))
+;;         (else (error "Unknown type: ANGLE" z))))
 
 (define (make-from-real-imag x y)
   (make-from-real-imag-rec x y))
 (define (make-from-mag-ang r a)
   (make-from-mag-ang-pol r a))
+
+;; Data directed programming is the technique of designing programs to work
+;; with a table directly
+;; (put <op> <type> <item>)
+;; (get <op> <type>)
+
+(define (install-rectangular-package)
+  ;; internal procedures
+  (define (real-part z) (car z))
+  (define (imag-part z) (cdr z))
+  (define (make-from-real-imag x y) (cons x y))
+  (define (magnitude z)
+    (sqrt (+ (square (real-part z))
+             (square (imag-part z)))))
+  (define (angle z)
+    (atan (imag-part z) (real-part z)))
+  (define (make-from-mag-ang r a)
+    (cons (* r (cos a)) (* r (sin a))))
+
+  ;; interface to the rest of the system
+  (define (tag x) (attach-tag 'rectangular x))
+  ;; (put 'real-part '(rectangular) real-part)
+  ;; (put 'imag-part '(rectangular) imag-part)
+  ;; (put 'magnitude '(rectangular) magnitude)
+  ;; (put 'angle '(rectangular) angle)
+  ;; (put 'make-from-real-imag 'rectangular
+  ;;      (lambda (x y) (tag (make-from-real-imag x y))))
+  ;; (put 'make-from-mag-ang 'rectangular
+  ;;      (lambda (r a) (tag (make-from-mag-ang r a))))
+  'done)
+
+;; same for polar package
+
+;; (define (apply-generic op . args)
+;;   (let ((type-tags (map type-tag args)))
+;;     (let ((proc (get op type-tags)))
+;;       (if proc
+;;           (apply proc (map contents args))
+;;           (error "No method for these types: APPLY-GENERIC"
+;;                  (list op type-tags))))))
+
+;; (define (real-part z) (apply-generic 'real-part z))
+;; (define (imag-part z) (apply-generic 'imag-part z))
+;; (define (magnitude z) (apply-generic 'magnitude z))
+;; (define (angle z) (apply-generic 'angle z))
+
+;; 2.73
+;; (define (deriv exp var)
+;;   (cond ((number? exp) 0)
+;;         ((variable? exp)
+;;          (if (same-variable? exp var) 1 0))
+;;         ((sum? exp)
+;;          (make-sum (deriv (addend exp) var)
+;;                    (deriv (augend exp) var)))
+;;         ((product? exp)
+;;          (make-sum (make-product
+;;                     (multiplier exp)
+;;                     (deriv (multiplicand exp) var))
+;;                    (make-product
+;;                     (deriv (multiplier exp) var)
+;;                     (multiplicand exp))))
+;;         <more rules added here>
+;;         (else (error "unkown expression type: DERIV" exp))))
+
+;; (define (deriv exp var)
+;;   (cond ((number? exp) 0)
+;;         ((variable? exp) (if (same-variable? exp var) 1 0))
+;;         (else ((get 'deriv (operator exp))
+;;                (operands exp) var))))
+;; (define (operator exp) (car exp))
+;; (define (operands exp) (cdr exp))
+
+;; a).
+;;   Our table tag-type is based off the operator. The predicates number? and
+;;   same-variable? do not have operators, therefore there is no way to look-up
+;;   a proc in the table
+
+;; b).
+;; (define (install-deriv-sum)
+;;   ;; internal procedues
+;;   (define (deriv exp var)
+;;     (make-sum (deriv (addend exp) var)
+;;               (deriv (augend exp) var)))
+
+;;   ;; interface to the rest of the system
+;;   (define (tag x) (attach-tag 'sum x))
+;;   (put 'deriv '(sum) deriv)
+;;   'done
+
+;; (define (install-deriv-product)
+;;   ;; internal procedures
+;;   (define (deriv exp var)
+;;     (make-sum (make-product
+;;                (multiplier exp)
+;;                (deriv (multiplicand exp) var))
+;;               (make-product
+;;                (deriv (multiplier exp) var)
+;;                (multiplicand exp))))
+
+;;   ;; interface to the rest of the system
+;;   (define (tag x) (attach-tag 'product x))
+;;   (put 'deriv '(product) deriv)
+;;   'done)
+
+;; 2.74
+;; Paper exercises page 15
+
+;; Following along with reading
+;; (define (make-from-real-imag x y)
+;;   (define (dispatch op)
+;;     (cond ((eq? op 'real-part) x)
+;;           ((eq? op 'imag-part) y)
+;;           ((eq? op 'magnitude) (sqrt (+ (square x) (square y))))
+;;           ((eq? op 'angle) (atan y x))
+;;           (else (error "Uknown op: MAKE-FROM-REAL-IMAG" op))))
+;;   dispatch)
+
+;; Discuss
+;; 2.75 & 2.76
+;; (define (make-from-mag-ang r a)
+;;   (define (dispatch op)
+;;     (cond ((eq? op 'real-part) (* r (cos a)))
+;;           ((eq? op 'imag-part) (* r (sin a)))
+;;           ((eq? op 'magngitude) r)
+;;           ((eq? op 'angle) a)
+;;           (else (error "Unkown op: MAKE-FROM-MAG-ANG" op)))))
