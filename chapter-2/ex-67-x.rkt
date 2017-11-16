@@ -154,15 +154,19 @@
                      (- (angle z1) (angle z2))))
 
 (define (attach-tag type-tag contents)
-  (cons type-tag contents))
+  (if (number? contents)
+      contents
+      (cons type-tag contents)))
 (define (type-tag datum)
-  (if (pair? datum)
-      (car datum)
-      (error "Bad tagged datum: TYPE-TAG" datum)))
+  (cond ((number? datum) datum)
+        ((pair? datum) (car datum))
+        (else
+         (error "Bad tagged datum: TYPE-TAG" datum))))
 (define (contents datum)
-  (if (pair? datum)
-      (cdr datum)
-      (error "Bad tagged datum: CONTENTS" datum)))
+  (cond ((number? datum) datum)
+        ((pair? datum) (cdr datum))
+        (else
+         (error "Bad tagged datum: CONTENTS" datum))))
 
 (define (rectangular? z)
   (eq? (type-tag z) 'rectangular))
@@ -352,3 +356,49 @@
 ;;           ((eq? op 'magngitude) r)
 ;;           ((eq? op 'angle) a)
 ;;           (else (error "Unkown op: MAKE-FROM-MAG-ANG" op)))))
+
+;; Following along with reading
+
+;; (define (add x y) (apply-generic 'add x y))
+
+;; (define (install-scheme-number-package)
+;;   (define (tag x) (attach-tag 'scheme-number x))
+;;   (put 'add '(scheme-number scheme-number)
+;;        (lambda (x y) (tag (+ x y))))
+;;   (put 'make 'scheme-number (lambda (x) (tag x)))
+;;   'done)
+
+;; (define (make-scheme-number n)
+;;   ((get 'make 'scheme-number) n))
+
+;; (define (install-rational-package)
+;;   (define (numer x) (car x))
+;;   (define (denom x) (cdr x))
+;;   (define (make-rat n d)
+;;     (let ((g (gcd n d)))
+;;       (cons (/ n g) (/ d g))))
+;;   (define (add-rat x y)
+;;     (make-rat (+ (* (numer x) (denom y))
+;;                  (* (numer y) (denom x)))
+;;               (* (denom x) (denom y))))
+
+;;   (define (tag x) (attach-tag 'rational x))
+;;   (put 'add '(rational rational)
+;;        (lambda (x y) (tag (add-rat x y))))
+;;   (put 'make 'rational
+;;        (lambda (n d) (tag (make-rat n d))))
+;;   'done)
+
+;; (define (make-rational-number n d)
+;;   ((get 'make 'rational) n d))
+
+;; 2.77
+;; Fails because there is currently no row for the 'magnitude operation in the
+;; operation-and-type table
+
+;; (put 'magnitude 'complex magnitude)
+;; <proc: apply-generic> applied twice
+;; 1. (apply-generic 'magnitude 'complex) # from arithmetic package table
+;; 2. (apply-generic 'magnitude '(rectangular)) # from complex table
+
+;; 2.78
