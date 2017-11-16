@@ -158,7 +158,7 @@
       contents
       (cons type-tag contents)))
 (define (type-tag datum)
-  (cond ((number? datum) datum)
+  (cond ((number? datum) 'scheme-number)
         ((pair? datum) (car datum))
         (else
          (error "Bad tagged datum: TYPE-TAG" datum))))
@@ -359,12 +359,13 @@
 
 ;; Following along with reading
 
-;; (define (add x y) (apply-generic 'add x y))
-
 ;; (define (install-scheme-number-package)
 ;;   (define (tag x) (attach-tag 'scheme-number x))
+
 ;;   (put 'add '(scheme-number scheme-number)
 ;;        (lambda (x y) (tag (+ x y))))
+;;   (put 'equ? '(scheme-number scheme-number)
+;;        (lambda (x y) (tag (= x y))))
 ;;   (put 'make 'scheme-number (lambda (x) (tag x)))
 ;;   'done)
 
@@ -381,16 +382,26 @@
 ;;     (make-rat (+ (* (numer x) (denom y))
 ;;                  (* (numer y) (denom x)))
 ;;               (* (denom x) (denom y))))
+;;   (define (equ? x y)
+;;     (let ((x (gcd (numer x) (denom x)))
+;;           (y (gcd (numer y) (denom y))))
+;;       (and (= (numer x) (numer y))
+;;            (= (denom x) (denom y)))))
 
 ;;   (define (tag x) (attach-tag 'rational x))
 ;;   (put 'add '(rational rational)
 ;;        (lambda (x y) (tag (add-rat x y))))
+;;   (put 'equ? '(rational rational)
+;;        (lambda (x y) (tag (equ? x y))))
 ;;   (put 'make 'rational
 ;;        (lambda (n d) (tag (make-rat n d))))
 ;;   'done)
 
 ;; (define (make-rational-number n d)
 ;;   ((get 'make 'rational) n d))
+
+;; (define (add x y) (apply-generic 'add x y))
+;; (define (equ? x y) (apply-generic 'equ? x y))
 
 ;; 2.77
 ;; Fails because there is currently no row for the 'magnitude operation in the
@@ -402,3 +413,4 @@
 ;; 2. (apply-generic 'magnitude '(rectangular)) # from complex table
 
 ;; 2.78
+;; Added equ? to scheme-number and rational packages
