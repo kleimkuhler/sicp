@@ -317,7 +317,7 @@
 ;;   ;; interface to the rest of the system
 ;;   (define (tag x) (attach-tag 'sum x))
 ;;   (put 'deriv '(sum) deriv)
-;;   'done
+;;   'done)
 
 ;; (define (install-deriv-product)
 ;;   ;; internal procedures
