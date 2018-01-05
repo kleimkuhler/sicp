@@ -403,6 +403,9 @@
 ;; (define (add x y) (apply-generic 'add x y))
 ;; (define (equ? x y) (apply-generic 'equ? x y))
 
+;; Note for meetup: How does the complex-package differ it's operation-and-type
+;; table from the arithmetic package operation-and-type table
+
 ;; 2.77
 ;; Fails because there is currently no row for the 'magnitude operation in the
 ;; operation-and-type table
@@ -414,3 +417,51 @@
 
 ;; 2.78
 ;; Added equ? to scheme-number and rational packages
+
+;; Following along with reading
+;; Often different data types are not completely indepdendent, and there may be
+;; ways by which objects of one type may be viewed as being of another type
+
+;; (define (scheme-number->complex n)
+;;   (make-complex-from-real-image (contents n) 0))
+
+;; Install in coercion table, indexed under the names of the two types
+;; (put-coercion 'scheme-number
+;;               'complex
+;;               scheme-number->complex)
+
+;; try: dispatch procedure found in the operation-and-type table
+;; try: dispatch type transformation in coercion table
+;;   1) t1->t2
+;;   2) t2->t1
+(define (apply-generic op . args)
+  (let ((type-tags (map type-tag args)))
+    (let ((proc (get op type-tags)))
+      (if proc
+          (apply proc (map contents args))
+          (let ((type1 (car type-tags))
+                (type2 (cadr type-tags))
+                (a1 (car args))
+                (a2 (cadr args)))
+            (if (and (= (length args) 2) (not (eq? type1 type2)))
+                (let ((t1->t2 (get-coercion type1 type2))
+                      (t2->t1 (get-coercion type2 type1)))
+                  (cond (t1->t2
+                         (apply-generic op (t1->t2 a1) a2))
+                        (t2->t1
+                         (apply-generic op a1 (t2->t1 a2)))
+                        (else (error "No method for these types"
+                                     (list op type-tags))))))
+              (error "No method for these types"
+                     (list op type-tags)))))))
+
+;; 2.81
+;; a). Infinitely loops on arguments of the same type that do not have `op`
+;;     operation
+;; b). Works correctly: evaluates down to second error
+;; c). Corrected to check for same type in if condition
+
+;; 2.82-2.86 Meetup discuss
+;; Page 21 notebook
+
+
