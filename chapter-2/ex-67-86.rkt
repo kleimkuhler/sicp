@@ -459,8 +459,99 @@
 ;; 2.81
 ;; a). Infinitely loops on arguments of the same type that do not have `op`
 ;;     operation
-;; b). Works correctly: evaluates down to second error
+;; b). Louis's fix does not work. Fix must take place in the check for types in
+;;     operation-and-type table
 ;; c). Corrected to check for same type in if condition
 
 ;; 2.82-2.86 Meetup discuss
 ;; Page 21 notebook
+
+;; 2.82
+;; (define (apply-generic op . args)
+;;   ;; find the type that all args can be coerced into
+;;   (define (find-generic-types arg-types type-tags)
+;;     (cond ((null? type-tags) #f)
+;;           ((null?? arg-types) (car type-tags))
+;;           (else
+;;            (find-generic-type (cdr  args)
+;;                               (find-coercion-types (car args)
+;;                                                    type-tags)))))
+;;   ;; filter type-tags down to types that arg-type can be coerced into
+;;   (define (find-coercion-types arg-type type-tags)
+;;     (filter (lambda (target)
+;;               (when (not (equal? arg-type target))
+;;                 (get-coercion arg-type target)))
+;;             type-tags))
+;;   ;; coerce all args to target-type
+;;   (define (coerce target-type)
+;;     (map (lambda (arg)
+;;            (let ((arg-type (type-tag arg)))
+;;              (if (equal? arg-type target-type)
+;;                  arg
+;;                  ((get-coercion arg-type target-type) arg))))
+;;          args))
+;;   (let ((type-tags (map type-tag args)))
+;;     (let ((proc (get op type-tags)))
+;;       (if proc
+;;           (apply proc (map contents args))
+;;           (let ((target-type (find-generic-types args)))
+;;             (if target-type
+;;                 (apply apply-generic (cons op (coerce target-type)))
+;;                 (error "No method for these types"
+;;                        (list op type-tags))))))))
+
+;; 2.83
+;; Integer -> Rational -> Real -> Complex
+(define (raise arg) (apply-generic 'raise arg))
+(put 'raise 'integer
+     (lambda (x) (make-rational x 1)))
+(put 'raise 'rational
+     (lambda (x) (make-real (/ (numer x) (denom x)))))
+(put 'raise 'real
+     (lambda (x) (make-complex-from-real-image x 0)))
+
+;; 2.84
+(define (apply-generic op . args)
+  (define (not-same-types? type-tags)
+    (if (null? (cdr type-tags))
+        (car type-tags)
+        (eq? (car type-tags) (not-same-types? (cdr type-tags)))))
+  (define (highest-type type-tags)
+    (if (null? (cdr type-tags))
+        (car type-tags)
+        (let ((t1 (car type-tags))
+              (t2 (highest-type (cdr type-tags))))
+          (let ((l1 (level t1))
+                (l2 (level t2)))
+            (if (> l1 l2) l1 l2)))))
+  (define (raise-args args type)
+    (define (raise-arg arg)
+      (if (< (level (type-tag arg)) (level type))
+          (raise-arg (raise arg))
+          arg))
+    (map (lambda (arg) (raise-arg arg)) args)
+  (let ((type-tags (map type-tag args)))
+    (let ((proc (get op type-tags)))
+      (if proc
+          (apply proc (map content args))
+          (if (not-same-types? type-tags)
+              (let ((highest (highest-type type-tags)))
+                (let ((raised-args (raise-args args (level highest))))
+                  (apply-generic op raised-args)))
+              (error "No method for these types"
+                     (list op type-tags)))))))
+
+(define (level type)
+  (apply-generic 'level type))
+
+(define (install-level-package)
+  (put 'level 'scheme-number 1)
+  (put 'level 'rational 2)
+  (put 'level 'real 3)
+  (put 'level 'complex 4))
+
+(install-level-pack)
+
+;; 2.85
+;; (put 'drop 'TYPE_HERE) for each type in operation-and-type table
+;; The only change to `apply-generic()` should be (drop (apply ...))
