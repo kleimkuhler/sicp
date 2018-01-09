@@ -25,6 +25,11 @@
                (car term-list)))
 
   ;; internal helper procedures
+  (define (negate-terms term-list)
+    (map (lambda (t)
+           (make-term (order t)
+                      (negate (coeff t))))
+         term-list))
   (define (add-terms L1 L2)
     (cond ((empty-termlist? L1) L2)
           ((empty-termlist? L2) L1)
@@ -54,15 +59,27 @@
           (adjoin-term (make-term (+ (order t1) (order t2))
                                   (mul (coeff t1) (coeff t2)))
                        (mul-term-by-all-terms t1 (rest L))))))
+  (define (div-terms L1 L2)
+    (if (empty-termlist? L1)
+        (list (empty-termlist) (empty-termlist))
+        (let ((t1 (first-term L1))
+              (t2 (first-term L2)))
+          (if (> (order t2) (order t1))
+              (list (empty-termlist) L1)
+              (let ((new-c (div (coeff t1) (coeff t2)))
+                    (new-o (- (order t1) (order t2))))
+                (let ((result-of-result
+                       (div-terms (add-terms L1
+                                             (negate-terms
+                                              (mul-terms (make-term new-o new-c)
+                                                         L2)))
+                                  L2)))
+                  (list (adjoin-term (make-term new-o new-c)
+                                     (car rest-of-result))
+                        (cadr rest-of-result))))))))
 
   ;; internal procedures
   (define (make-poly variable term-list) (cons variable term-list))
-  (define (negate-poly p)
-    (make-poly (variable p)
-               (map (lambda (t)
-                      (make-term (order t)
-                                 (negate (coeff t))))
-                    (term-list p))))
   (define (add-poly p1 p2)
     (if (same-variable? (variable p1) (variable p2))
         (make-poly (variable p1)
@@ -73,6 +90,15 @@
         (make-poly (variable p1)
                    (mul-terms (term-list p1) (term-list p2)))
         (error "Polys not in same var: MUL-POLY" (list p1 p2))))
+  (define (div-poly p1 p2)
+    (if (same-variable? (variable p1) (variable p2))
+        (let ((result (div-terms (term-list p1)
+                                 (term-list p2))))
+          (list (make-poly (variable p1)
+                           (car result))
+                (make-poly (variable p2)
+                           (cadr result))))
+        (error "Polys not in same var: DIV-POLY" (list p1 p2))))
 
   ;; interface to rest of the system
   (define (tag p) (attach-tag 'dense p))
@@ -84,10 +110,15 @@
        (lambda (p) (tag (negate p))))
   (put 'add '(dense dense)
        (lambda (p1 p2) (tag (add-poly p1 p2))))
-  (put 'sub '(dense dense)
-       (lambda (p1 p2) (tag (add-poly p1 (negate p2)))))
+  (put 'sub '(sparse sparse)
+       (lambda (p1 p2) (tag (add-poly p1
+                                      (make-poly (variable p2)
+                                                 (negate-terms (term-list p2)))))))
   (put 'mul '(dense dense)
        (lambda (p1 p2) (tag (mul-poly p1 p2))))
+  (put 'div '(dense dense)
+       (lambda (p1 p2) (tag (div-poly p1 p2))))
+
   'done)
 
 (define (install-polynomial-sparse-package)
@@ -112,6 +143,11 @@
   (define (first-term term-list) (car term-list))
 
   ;; internal helper procedures
+  (define (negate-terms term-list)
+    (map (lambda (t)
+           (make-term (order t)
+                      (negate (coeff t))))
+         term-list))
   (define (add-terms L1 L2)
     (cond ((empty-termlist? L1) L2)
           ((empty-termlist? L2) L1)
@@ -142,6 +178,24 @@
           (adjoin-term (make-term (+ (order t1) (order t2))
                                   (mul (coeff t1) (coeff t2)))
                        (mul-term-by-all-terms t1 (rest L))))))
+  (define (div-terms L1 L2)
+    (if (empty-termlist? L1)
+        (list (empty-termlist) (empty-termlist))
+        (let ((t1 (first-term L1))
+              (t2 (first-term L2)))
+          (if (> (order t2) (order t1))
+              (list (empty-termlist) L1)
+              (let ((new-c (div (coeff t1) (coeff t2)))
+                    (new-o (- (order t1) (order t2))))
+                (let ((result-of-result
+                       (div-terms (add-terms L1
+                                             (negate-terms
+                                              (mul-terms (make-term new-o new-c)
+                                                         L2)))
+                                  L2)))
+                  (list (adjoin-term (make-term new-o new-c)
+                                     (car rest-of-result))
+                        (cadr rest-of-result))))))))
 
   ;; internal procedures
   (define (make-poly variable term-list) (cons variable term-list))
@@ -161,6 +215,15 @@
         (make-poly (variable p1)
                    (mul-terms (term-list p1) (term-list p2)))
         (error "Polys not in same var: MUL-POLY" (list p1 p2))))
+  (define (div-poly p1 p2)
+    (if (same-variable? (variable p1) (variable p2))
+        (let ((result (div-terms (term-list p1)
+                                 (term-list p2))))
+          (list (make-poly (variable p1)
+                           (car result))
+                (make-poly (variable p2)
+                           (cadr result))))
+        (error "Polys not in same var: DIV-POLY" (list p1 p2))))
 
   ;; interface to rest of the system
   (define (tag p) (attach-tag 'sparse p))
@@ -173,9 +236,13 @@
   (put 'add '(sparse sparse)
        (lambda (p1 p2) (tag (add-poly p1 p2))))
   (put 'sub '(sparse sparse)
-       (lambda (p1 p2) (tag (add-poly p1 (negate p2)))))
+       (lambda (p1 p2) (tag (add-poly p1
+                                      (make-poly (variable p2)
+                                                 (negate-terms (term-list p2)))))))
   (put 'mul '(sparse sparse)
        (lambda (p1 p2) (tag (mul-poly p1 p2))))
+  (put 'div '(spare sparse)
+       (lambda (p1 p2) (tag (div-poly p1 p2))))
   'done)
 
 (define (sparse-poly? p)
@@ -205,3 +272,7 @@
 ;; allows a sharing of procedures that do not. An internal (apply-generic)
 ;; could then select only from that table instead of the parent
 ;; operation-and-type table.
+
+;; 2.92
+;; To impose an ordering here, a solution could be to implement the tower
+;; method that was discussed and treat x as 1 and all other variables 0.
