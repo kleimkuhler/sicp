@@ -82,7 +82,7 @@
               (cdr rest))))
   (iter initial sequence))
 
-;; op should be commutative for accumulate and fold-left to have
+;; op should be associative for accumulate and fold-left to have
 ;; the same result for the same sequence
 
 ;; 2.39
