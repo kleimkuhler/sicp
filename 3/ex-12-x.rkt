@@ -97,3 +97,70 @@
            (iter (advance x 1)
                  (advance y 2)))))
   (iter x (mcdr x)))
+
+;; Following along with reading
+(define (mcons-cust x y)
+  (define (set-x! v) (set! x v))
+  (define (set-y! v) (set! y v))
+  (define (dispatch m)
+    (cond ((eq? m 'car) x)
+          ((eq? m 'cdr) y)
+          ((eq? m 'set-mcar-cust) set-x!)
+          ((eq? m 'set-mcdr-cust) set-y!)
+          (else (error "Undefined operation: CONS" m))))
+  dispatch)
+(define (mcar-cust z) (z 'car))
+(define (mcdr-cust z) (z 'cdr))
+(define (set-mcar-cust z new-value)
+  ((z 'set-mcar-cust) new-value))
+(define (set-mcdr-cust z new-value)
+  ((z 'set-mcdr-cust) new-value))
+
+;; A queue needs the following:
+;; Constructor
+;; Selectors:
+;; * empty-queue?
+;; * front-queue
+;; Mutators:
+;; * insert-queue!
+;; * delete-queue!
+(define (front-ptr queue) (mcar queue))
+(define (rear-ptr queue) (mcdr queue))
+(define (set-front-ptr! queue item)
+  (set-mcar! queue item))
+(define (set-rear-ptr! queue item)
+  (set-mcdr! queue item))
+
+(define (make-queue) (mcons '() '()))
+
+(define (empty-queue? queue)
+  (null? (front-ptr queue)))
+(define (front-queue queue)
+  (if (not (empty-queue? queue))
+      (mcar (front-ptr queue))
+      (error ("FRONT-PTR called with an empty queue" queue))))
+
+(define (insert-queue! queue item)
+  (let ((pair (mcons item '())))
+    (cond ((empty-queue? queue)
+           (set-front-ptr! queue pair)
+           (set-rear-ptr! queue pair)
+           queue)
+          (else
+           (set-mcdr! (rear-ptr queue) pair)
+           (set-rear-ptr! queue pair)
+           queue))))
+(define (delete-queue! queue)
+  (cond ((not (empty-queue? queue))
+         (set-front-ptr! queue (mcdr (front-ptr queue)))
+         queue)
+        (else
+         (error ("DELETE-QUEUE! called with an empty queue" queue)))))
+
+;; 3.21
+(define (print-queue queue)
+  (define (iter queue result)
+    (if (null? queue)
+        (mreverse result)
+        (iter (mcdr queue) (mcons (mcar queue) result))))
+  (iter (front-ptr queue) '()))
