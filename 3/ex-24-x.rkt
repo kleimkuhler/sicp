@@ -59,3 +59,41 @@
 
 ;; 3.24
 ;; Added an additional parameter to `assoc` to check key equality
+
+;; 3.25
+(define (make-table same-key?)
+  (let ((table (mlist '*table*)))
+    (define (assoc key records)
+      (cond ((null? records) #f)
+            ((same-key? key (mcar (mcar records))) (mcar records))
+            (else (assoc key (mcdr records)))))
+    (define (lookup keys)
+      (define (iter subtable keys)
+        (cond ((null? keys) subtable)
+              ((not (mpair? subtable)) #f)
+              (else
+               (let ((new-subtable (assoc (car keys) subtable)))
+                 (if new-subtable
+                     (iter (mcdr new-subtable) (cdr keys))
+                     #f)))))
+      (iter (mcdr table) keys))
+    (define (insert! keys value)
+      (define (iter subtable keys value)
+        (cond ((null? keys) (set-mcdr! subtable value))
+              ((not (mpair? (mcdr subtable)))
+               (set-mcdr! subtable (mlist (mcons (car keys) '())))
+               (iter (mcar (mcdr subtable)) (cdr keys) value))
+              (else
+               (let ((new-subtable (assoc (car keys) (mcdr subtable))))
+                 (if new-subtable
+                     (iter new-subtable (cdr keys) value)
+                     (begin
+                       (set-mcdr! subtable
+                                  (mcons (mlist (car keys)) (mcdr subtable)))
+                       (iter (mcar (mcdr subtable)) (cdr keys) value)))))))
+      (iter table keys value))
+    (define (dispatch m)
+      (cond ((eq? m 'lookup-proc) lookup)
+            ((eq? m 'insert-proc!) insert!)
+            (else (error "Unknown operation: TABLE" m))))
+    dispatch))
