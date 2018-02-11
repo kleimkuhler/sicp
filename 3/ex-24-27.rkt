@@ -97,3 +97,71 @@
             ((eq? m 'insert-proc!) insert!)
             (else (error "Unknown operation: TABLE" m))))
     dispatch))
+
+;; 3.26
+;; Make use of adjoin-set from binary tree exercises
+;; (define (adjoin-set x set)
+;;   (cond ((null? set) (make-tree x '() '()))
+;;         ((= x (entry set)) set)
+;;         ((< x (entry set))
+;;          (make-tree (entry set)
+;;                     (adjoin-set x (left-branch set))
+;;                     (right-branch set)))
+;;         ((> x (entry set))
+;;          (make-tree (entry set)
+;;                     (left-branch set)
+;;                     (adjoin-set x (right-branch set))))))
+
+;; What is interesting about the above is a new tree is generated each time
+;; a new x is adjoined to the set. This is a different approach then the last
+;; few sections which have introduced mutability.
+
+;; (define (adjoin-set x set)
+;;   (cond ((null? set) (make-tree x '() '()))
+;;         ((= x (entry set)) set)
+;;         ((< x (entry set))
+;;          (let ((left (left-branch set)))
+;;            (set! left (adjoin-set x left))))
+;;         (else
+;;          (let ((right (right-branch set)))
+;;            (set! right (adjoin-set x right))))))
+
+;; (define (make-tree-table)
+;;   (let ((table (list '*table*)))
+;;     (define (lookup keys)
+;;       (define (iter keys subtable)
+;;         (if (null? keys)
+;;             subtable
+;;             (let ((new-subtable (assoc (car keys) subtable)))
+;;               (if new-subtable
+;;                   (iter (cdr keys) new-subtable)
+;;                   #f))))
+;;       (iter keys (cdr table)))
+;;     (define (insert! keys value)
+;;       (define (iter keys subtable)
+;;         (if (null? (cdr keys))
+;;             (adjoin-set (car keys) value subtable)
+;;             (let ((new-subtable (adjoin-set (car keys) '() subtable)))
+;;               (iter (cdr keys) new-subtable))))
+;;       (iter keys table))
+;;     (define (dispatch m)
+;;       (cond ((eq? m 'lookup-proc) lookup)
+;;             ((eq? m 'insert-proc!) insert!)
+;;             (error "Unknown operation: TREE-TABLE" m)))
+;;     dispatch))
+
+;; 3.27
+(define (lookup x table)
+  ((table 'lookup-proc) x))
+(define (insert! x value table)
+  ((table 'insert-proc!) x value))
+
+(define (memoize f)
+  (let ((table (make-table equal?)))
+    (lambda (x)
+      (let ((previously-computed-result
+             (lookup x table)))
+        (or previously-computed-result
+            (let ((result (f x)))
+              (insert! x result table)
+              result))))))
