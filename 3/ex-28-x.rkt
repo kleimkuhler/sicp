@@ -1,9 +1,5 @@
 #lang racket
 
-(get-signal <wire>)
-(set-signal! <wire> <new value>)
-(add-action! <wire> <procedure of no arguments>)
-
 (define (logical-not s)
   (cond ((= s 0) 1)
         ((= s 1) 0)
@@ -66,3 +62,41 @@
     'ok))
 
 ;; 3.30
+;; Meetup
+(define (ripple-carry-adder a b s c)
+  (let ((c-in (make-wire)))
+    (if (null? (cdr a))
+        (set-signal! c-in 0)
+        (ripple-carry-adder (cdr a) (cdr b) (cdr s) c-in))
+    (full-adder (car a) (car b) c-in (car s) c)))
+
+;; Following along with reading
+(define (make-wire)
+  (let ((signal-value 0) (action-procedures '()))
+    (define (set-my-signal! new-value)
+      (if (not (= signal-value new-value))
+          (begin (set! signal-value new-value)
+                 (call-each action-procedures))
+          'done))
+    (define (accept-action-procedure! proc)
+      (set! action-procedures
+            (cons proc action-procedures))
+      (proc))
+    (define (dispatch m)
+      (cond ((eq? m 'get-signal) signal-value)
+            ((eq? m 'set-signal!) set-my-signal!)
+            ((eq? m 'add-action!) accept-action-procedure!)
+            (else (error "Unknown operation: WIRE" m))))
+    dispatch))
+
+(define (call-each procedures)
+  (if (null? procedures)
+      'done
+      (begin ((car procedures))
+             (call-each (cdr procedures)))))
+
+(define (get-signal wire) (wire 'get-signal))
+(define (set-signal! wire new-value)
+  ((wire 'set-signal!) new-value))
+(define (add-action! wire action-procedure)
+  ((wire 'add-action!) action-procedure))
