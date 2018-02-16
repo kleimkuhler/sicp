@@ -76,27 +76,81 @@
     (define (set-my-signal! new-value)
       (if (not (= signal-value new-value))
           (begin (set! signal-value new-value)
-                 (call-each action-procedures))
+                 (call-each action-procedure))
           'done))
     (define (accept-action-procedure! proc)
-      (set! action-procedures
-            (cons proc action-procedures))
+      (set! action-procedures (cons proc action-procedures))
       (proc))
     (define (dispatch m)
       (cond ((eq? m 'get-signal) signal-value)
             ((eq? m 'set-signal!) set-my-signal!)
             ((eq? m 'add-action!) accept-action-procedure!)
-            (else (error "Unknown operation: WIRE" m))))
+            (else (error "MAKE-WIRE: Unknown operation" m))))
     dispatch))
 
 (define (call-each procedures)
-  (if (null? procedures)
-      'done
-      (begin ((car procedures))
-             (call-each (cdr procedures)))))
+  (if (not (null? procedures))
+      (begin (car procedures)
+             (call-each (cdr procedures)))
+      'done))
 
 (define (get-signal wire) (wire 'get-signal))
 (define (set-signal! wire new-value)
   ((wire 'set-signal!) new-value))
 (define (add-action! wire action-procedure)
   ((wire 'add-action!) action-procedure))
+
+(define (make-agenda)
+  (let ((the-agenda '()))
+    (define (empty-agenda?) (null? the-agenda))
+    (define (first-agenda-item)
+      (if (not (empty-agenda?))
+          (car the-agenda)
+          (error "FIRST-AGENDA-ITEM: Called with empty agenda" the-agenda)))
+    (define (remove-first-agenda-item!)
+      (if (not (empty-agenda?))
+          (begin (set! the-agenda (cdr the-agenda))
+                 'done)
+          (error "REMOVE-FIRST-AGENDA-ITEM!: Called with empty agenda"
+                 the-agenda)))
+    (define (add-to-agenda! item)
+      (set! the-agenda (append the-agenda item))
+      'done)
+    (define (current-time)
+      #t)
+    (define (after-delay delay action)
+      (add-to-agenda! (+ delay (current-time the-agenda))
+                      action
+                      the-agenda))
+    (define (propagate)
+      (if (empty-agenda? the-agenda)
+          'done
+          (let ((first-item (first-agenda-item the-agenda)))
+            (first-item)
+            (remove-first-agenda-item! the-agenda)
+            (propagate))))
+    (define (dispatch m)
+      (cond ((eq? m 'empty-agenda?) empty-agenda?)
+            ((eq? m 'first-agenda-item) first-agenda-item)
+            ((eq? m 'remove-first-agenda-item!) remove-first-agenda-item!)
+            ((eq? m 'add-to-agenda!) add-to-agenda!)
+            ((eq? m 'current-time) current-time)
+            ((eq? m 'after-delay) after-delay)
+            ((eq? m 'propagate) propagate)
+            (else (error "MAKE-AGENDA: Unknown operation" m))))
+    dispatch))
+
+;; (half-adder input-1 input-2 sum carry) ok
+;; (set-signal! input-1 1) done
+;; (propagate)
+;; sum 8 New-value = 1 done
+
+;; and-gate-delay = 3, or-gate-delay = 5, inverter-delay = 2
+;; half-adder is a total sum of 8 because the and-gate and inverter can
+;; complete in the time it takes the or-gate to.
+
+;; 3.31
+;; An action-procedure is added to a wire via the `after-delay` procedure.
+;; `accept-action-procedure` needs to run the new procedure right away because
+;; running it is what actually adds the action to the-agenda. The agenda's
+;; `propagate` is responsible for actually executing the action.
