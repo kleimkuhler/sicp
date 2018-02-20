@@ -29,9 +29,9 @@
 (define (add-to-agenda! time action agenda)
   (define (belongs-before? segments)
     (or (null? segments)
-        (< (segment-time (mcar segments)))))
+        (< time (segment-time (mcar segments)))))
   (define (make-new-time-segment time action)
-    (let ((q (make-agenda)))
+    (let ((q (make-queue)))
       (insert-queue! q action)
       (make-time-segment time q)))
   (define (add-to-segments! segments)
@@ -45,7 +45,7 @@
                (mcons (make-new-time-segment time action)
                       (mcdr segments)))
               (add-to-segments! rest)))))
-  (let ((segments (agenda segments)))
+  (let ((segments (segments agenda)))
     (if (belongs-before? segments)
         (set-segments!
          agenda
@@ -67,7 +67,7 @@
         (front-queue (segment-queue first-seg)))
       (error "FIRST-AGENDA-ITEM: Called with empty agenda")))
 
-(define (after-delay agenda delay action)
+(define (after-delay delay action agenda)
   (add-to-agenda! (+ delay (current-time agenda))
                   action
                   agenda))
@@ -78,4 +78,4 @@
       (let ((first-item (first-agenda-item agenda)))
         (first-item)
         (remove-first-agenda-item! agenda)
-        (propagate))))
+        (propagate agenda))))

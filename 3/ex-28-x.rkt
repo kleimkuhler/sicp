@@ -8,35 +8,34 @@
 (define the-agenda (make-agenda))
 
 ;; Half-adder circuit
-(define (half-adder a b s c)
+(define (half-adder a b s c agenda)
   (let ((d (make-wire)) (e (make-wire)))
-    (or-gate a b d)
-    (and-gate a b c)
-    (inverter c e)
-    (and-gate d e s)
+    (or-gate a b d agenda)
+    (and-gate a b c agenda)
+    (inverter c e agenda)
+    (and-gate d e s agenda)
     'ok))
 
 ;; Full-adder circuit
-(define (full-adder a b c-in sum c-out)
+(define (full-adder a b c-in sum c-out agenda)
   (let ((s (make-wire)) (c1 (make-wire)) (c2 (make-wire)))
-    (half-adder b c-in s c1)
-    (half-adder a s sum c2)
-    (or-gate c1 c2 c-out)
+    (half-adder b c-in s c1 agenda)
+    (half-adder a s sum c2 agenda)
+    (or-gate c1 c2 c-out agenda)
     'ok))
 
 ;; 3.30
 ;; Ripple-carry-adder circuit
-(define (ripple-carry-adder a b s c)
+(define (ripple-carry-adder a b s c agenda)
   (let ((c-in (make-wire)))
     (if (null? (cdr a))
         (set-signal! c-in 0)
-        (ripple-carry-adder (cdr a) (cdr b) (cdr s) c-in))
-    (full-adder (car a) (car b) c-in (car s) c)))
+        (ripple-carry-adder (cdr a) (cdr b) (cdr s) c-in agenda))
+    (full-adder (car a) (car b) c-in (car s) c agenda)))
 
 (define (probe name wire)
   (add-action! wire
                (lambda ()
-                 (newline)
                  (display name) (display " ")
                  (display (current-time the-agenda))
                  (display " New-value = ")

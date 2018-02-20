@@ -31,28 +31,31 @@
   (if (or (= s1 1) (= s2 1)) 1 0))
 
 ;; Gates
-(define (inverter input output)
+(define (inverter input output agenda)
   (define (invert-input)
     (let ((new-value (logical-not (get-signal input))))
       (after-delay inverter-delay
-                   (lambda () (set-signal! output new-value)))))
+                   (lambda () (set-signal! output new-value))
+                   agenda)))
   (add-action! input invert-input) 'ok)
 
-(define (and-gate s1 s2 output)
+(define (and-gate s1 s2 output agenda)
   (define (and-action-procedure)
     (let ((new-value (logical-and (get-signal s1) (get-signal s2))))
       (after-delay and-gate-delay
-                   (lambda () (set-signal! output new-value)))))
+                   (lambda () (set-signal! output new-value))
+                   agenda)))
   (add-action! s1 and-action-procedure)
   (add-action! s2 and-action-procedure)
   'ok)
 
 ;; 3.28
-(define (or-gate s1 s2 output)
+(define (or-gate s1 s2 output agenda)
   (define (or-action-procedure)
     (let ((new-value (logical-or (get-signal s1) (get-signal s2))))
       (after-delay or-gate-delay
-                   (lambda () (set-signal! output new-value)))))
+                   (lambda () (set-signal! output new-value))
+                   agenda)))
   (add-action! s1 or-action-procedure)
   (add-action! s2 or-action-procedure))
 
