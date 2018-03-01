@@ -1,5 +1,3 @@
-#lang racket
-
 ;; Following along with reading
 (define (accumulate op initial sequence)
   (if (null? sequence)

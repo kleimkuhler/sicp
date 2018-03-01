@@ -1,5 +1,3 @@
-#lang racket
-
 ;; --------------------------------------------------
 ;; All functions are defined below. No executions take place when
 ;; run; use the REPL to test

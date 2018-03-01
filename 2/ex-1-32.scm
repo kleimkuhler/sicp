@@ -1,5 +1,3 @@
-#lang racket
-
 ;; --------------------------------------------------
 ;; Common defines used among exercises
 (define (gcd a b)
@@ -85,7 +83,7 @@
   (define (dispatch m)
     (cond ((= m 0) x)
           ((= m 1) y)
-          (else (error "Argument not 0 or 1 -- CONS" m))))
+          (else (display "Error: Argument not 0 or 1 -- CONS" m))))
   dispatch)
 
 (define (car-proc-dispatch z) (z 0))
@@ -169,7 +167,7 @@
 ;; 2.10
 (define (div-interval x y)
   (if (and (<= (lower-bound y) 0) (>= (upper-bound y) 0))
-      (error "Error: The denominator can not span 0")
+      (display "Error: The denominator can not span 0")
       (mul-interval
        x
        (make-interval (/ 1.0 (upper-bound y))

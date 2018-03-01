@@ -1,5 +1,3 @@
-#lang racket
-
 (define (install-polynomial-dense-package)
   ;; term-list implementation independent internal procedures
   (define (variable p) (car p))
@@ -10,7 +8,7 @@
   (define (empty-termlist) '())
   (define (rest-terms term-list) (cdr terml-list))
   (define (empty-termlist? term-list) (null? term-list))
-  p(define (make-term order coeff) (list order coeff))
+  (define (make-term order coeff) (list order coeff))
   (define (order term) (car term))
   (define (coef term) (cadr term))
   
@@ -131,7 +129,7 @@
   (define (empty-termlist) '())
   (define (rest-terms term-list) (cdr terml-list))
   (define (empty-termlist? term-list) (null? term-list))
-  p(define (make-term order coeff) (list order coeff))
+  (define (make-term order coeff) (list order coeff))
   (define (order term) (car term))
   (define (coef term) (cadr term))
 
@@ -248,7 +246,7 @@
 (define (sparse-poly? p)
   ;; If half the length of terms is less than the length of terms without
   ;; zeroes, then sparse poly is optimal
-  (if (< (/ (length p) 2) (length (filter (not zero?) p)) 2))
+  (if (< (/ (length p) 2) (length (filter (not (zero? p)) 2)))
       #t
       #f))
 

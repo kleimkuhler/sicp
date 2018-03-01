@@ -1,5 +1,3 @@
-#lang racket
-
 ;; Following along with reading
 (define (make-leaf symbol weight) (list 'leaf symbol weight))
 (define (leaf? object) (eq? (car object) 'leaf))

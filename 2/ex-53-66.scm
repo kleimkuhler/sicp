@@ -1,5 +1,3 @@
-#lang racket
-
 ;; 2.53
 ;; Notepad exercises
 
@@ -71,7 +69,7 @@
                                              (make-sum (exponent exp) -1)))
           (deriv (base exp) var)))
         (else
-         (error "unknown expression type -- DERIV" exp))))
+         (display "Error: unknown expression type -- DERIV" exp))))
 
 ;; 2.57
 (define (augend-prefix a)
