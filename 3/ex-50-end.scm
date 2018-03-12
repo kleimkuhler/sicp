@@ -179,3 +179,54 @@
 		(stream-map (lambda (x) (list x (stream-car t)))
 			    (stream-cdr s)))
     (pairs (stream-cdr s) (stream-cdr t)))))
+
+;; 3.73
+(define (integral integrand initial-value dt)
+  (define int
+    (cons-stream initial-value
+		 (add-streams (scale-stream integrand dt)
+			      int)))
+  int)
+
+(define (rc r c dt)
+  (lambda (i initial-value)
+    (add-streams (scale-stream i r)
+		 (integral (scale-stream i (/ 1 c)) initial-value dt))))
+
+;; 3.74
+;; (define zero-crossings
+;;   (stream-map sign-change-detector sense-data (cdr sense-data)))
+
+;; (define zero-crossings
+;;   (stream-map sign-change-detector sense-data (cons 0 sense-data)))
+
+;; 3.75
+;; Rolling average needs to have the last average value in the calculation or
+;; the number of data points it is calculated from
+
+;; 3.76
+(define (smooth stream)
+  (stream-map (lambda (x y) (/ (+ x y) 2))
+	      input-stream (stream-cdr input-stream)))
+
+;; Reading
+(define (integral-delayed integrand-delayed initial-value dt)
+  (define int
+    (cons-stream initial-value
+		 (let ((integrand (force integrand-delayed)))
+		   (add-streams (scale-stream integrand dt)
+				int))))
+  int)
+
+;; Let's this be possible!
+(define (solve f y0 dt)
+  (define y (integral-delayed (delay dy) y0 dt))
+  (define dy (stream-map f y))
+  y)
+
+;; Reimplementation of stream withdraw to consider
+(define (stream-withdraw balance amount-stream)
+  (cons-stream
+   balance
+   (stream-withdraw (- balance (stream-car amount-stream))
+		    (stream-cdr amount-stream))))
