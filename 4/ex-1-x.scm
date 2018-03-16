@@ -1,3 +1,4 @@
+;; 4.1
 ;; Original implementation of `list-of-values` that is order dependent
 (define (list-of-values exps env)
   (if (no-operands? exps)
@@ -22,3 +23,12 @@
 	 (cons (eval (first-operand exps) env)
 	       rest-vals))
        (list-of-values-rl (rest-operands exps) env))))
+
+;; 4.2
+;; a). Procedure application clause appearing before assignment clauses causes
+;;     issues because procedure application checks for `pair?` and the
+;;     assigment clause would satisfy that predicate.
+
+;; b).
+(define (call? exp)
+  (tagged-list? exp 'call))
