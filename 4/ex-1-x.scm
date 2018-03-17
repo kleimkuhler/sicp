@@ -62,3 +62,54 @@
 		(list-of-values (operands exp) env)))
 	(else
 	 (error "Unknown expression type -- EVAL" exp))))
+
+;; 4.4
+;; Representing and/or expressions
+(define (eval-and exps env)
+  (let ((val (eval (first-exp exps) env)))
+    (cond ((last-exp? exps) val)
+	  (else (if (true? val)
+		    (eval-and (rest-exps exps) eval)
+		    val)))))
+
+(define (eval-or exps env)
+  (let ((val (eval (first-exp exps) env)))
+    (cond ((last-exp? exps) val)
+	  (else (if (false? val)
+		    (eval-or (rest-exps exps) eval)
+		    val)))))
+
+;; Deriving and/or expressions
+(define (and-clauses exp) (cdr exp))
+(define (or-clauses exp) (cdr exp))
+
+(define (and->if exp)
+  (expand-and-exp (and-exp exp)))
+(define (or->if exp)
+  (expand-or-exp (or-exp exp)))
+
+(define (expand-and-exp exp)
+  (if (null? exp)
+      '#t
+      (make-if (first-exp exp)
+	       (expand-and-exp (rest-exp exp))
+	       '#f)))
+
+(define (expand-or-exp exp)
+  (if (null? exp)
+      '#f
+      (make-if (first-exp exp)
+	       '#t
+	       (expand-or-exp (rest-exp exp)))))
+
+;; 4.5
+(define (expand-clasues clauses)
+  (if (null? clauses)
+      '#f
+      (let ((first (car clauses))
+	    (rest (cdr clauses)))
+	(if (cond-else-clauses? first)
+	    (if (null? rest)
+		(sequence->exp (cond-actions first))
+		(error "ELSE clause isn't last -- COND->IF" clauses))
+	    ()))))
