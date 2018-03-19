@@ -103,6 +103,14 @@
 	       (expand-or-exp (rest-exp exp)))))
 
 ;; 4.5
+(define (cond-actions clause)
+  (if (recipient-cond? clause)
+      (cons (caddr clause) (cond-predicate clause))
+      (cdr clause)))
+
+(define (recipient-cond? clause)
+  (eq? (cadr clause) '=>))
+
 (define (expand-clasues clauses)
   (if (null? clauses)
       '#f
@@ -112,4 +120,51 @@
 	    (if (null? rest)
 		(sequence->exp (cond-actions first))
 		(error "ELSE clause isn't last -- COND->IF" clauses))
-	    ()))))
+	    (make-if (cond-predicate first)
+		     (sequence->exp (cond-actions first))
+		     (expand-clauses rest))))))
+
+;; 4.6
+(define (let? exp) (tagged-list? exp 'let))
+
+(define (let-bindings exp) (map car (cadr exp)))
+
+(define (let-inits exp) (map cadr (cadr exp)))
+
+(define (let-body exp) (caddr exp))
+
+(define (let->combination exp)
+  (cons (make-lambda (let-bindings exp) (let-body exp))
+	(let-inits exp)))
+
+;; 4.7
+(define (let*? exp) (tagged-list? exp 'let*))
+
+(define (let*-bindings exp) (cadr exp))
+
+(define (let*-body exp) (caddr exp))
+
+(define (let*->nested-lets exp)
+  (let ((bindings (let*-bindings exp))
+	(body (let*-body exp)))
+    (define (make-lets exps)
+      (if (null? exps)
+	  body
+	  (cons 'let
+		(cons (car exps)
+		      (make-lets (cdr exps))))))
+    (make-lets bindings)))
+
+;; Named let implementation of 4.7
+(define (nlet*->nexted-lets exp)
+  (let let*-iter ((bindings (let*-bindings exp))
+		  (body (let*-body exp)))
+    (if (null? bindings)
+	body
+	(cons 'let
+	      (cons (car bindings)
+		    (let*-iter (cdr bindings) body))))))
+
+;; 4.8
+;; combination of eval-definition & lambda?
+;; Current solutions seem not very abstract/clean
