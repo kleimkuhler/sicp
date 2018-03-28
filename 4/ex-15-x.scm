@@ -46,3 +46,26 @@
 
 ;; c.
 ;; Belongs in `make-procedure`
+
+;; 4.18
+;; Procedure should work because of `delay`
+
+;; 4.19
+(let ((a 1))
+  (define (f x)
+    (define b (+ a x))
+    (define a 5)
+    (+ a b))
+  (f 10))
+
+;; Errors because this is generally just a poorly written procedure
+
+;; Best comparison of 4.16 vs 4.18. These are not fundamentally different; 4.18
+;; enforces the restriction that variable values can be evaluated without using
+;; any of the variable's values
+
+;; 4.20
+;; make-begin?
+(define (letrec->let exp)
+  (make-let (create-variables exp)
+	    (cons (set-variables exp) (letrec-body exp))))
