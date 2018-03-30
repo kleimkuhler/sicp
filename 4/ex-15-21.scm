@@ -69,3 +69,39 @@
 (define (letrec->let exp)
   (make-let (create-variables exp)
 	    (cons (set-variables exp) (letrec-body exp))))
+
+;; 4.21
+;; Solution 1
+;; ((lambda 👎
+;;    ((lambda (fib)
+;;       (fib fib n))
+;;     (lambda (g k)
+;;       (cond
+;;        [(= k 0) 0]
+;;        [(= k 1) 1]
+;;        [else (+ (g g (- k 1)) (g g (- k 2)))]))))
+;;  10)
+
+;; Solution 2
+;; Tail-call optimized
+;; ((lambda 👎
+;;    ((lambda (fib)
+;;       (fib fib 0 1 0))
+;;     (lambda (iter a b k)
+;;       (if (= k n)
+;; 	  a
+;; 	  (iter iter b (+ a b) (+ k 1))))))
+;;  10)
+
+;; This exercise is essentially Y combinator
+(define Y
+  (lambda (f)
+    ((lambda (x) (x x))
+     (lambda (x) (f (lambda (y) ((x x) y)))))))
+
+(define fact
+  (lambda (f)
+    (lambda (n)
+      (if (= n 0)
+	  1
+	  (* n (f (- n 1)))))))
