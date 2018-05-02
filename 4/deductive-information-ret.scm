@@ -41,3 +41,13 @@
 	   (or (same ?titles-1 ?titles-2)
 	       (can-do-job ?tiles-1 ?titles-2))))
 
+;; 4.62
+(rule (last-pair (?x) (?x)))
+
+(rule (last-pair (?y . ?z) (?x))
+      (last-pair ?z (?x)))
+
+;; 4.63
+(rule (grandson ?s ?g)
+      (and (father ?s ?f)
+	   (father ?f ?g)))
