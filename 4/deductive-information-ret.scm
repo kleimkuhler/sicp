@@ -51,3 +51,19 @@
 (rule (grandson ?s ?g)
       (and (father ?s ?f)
 	   (father ?f ?g)))
+
+;; 4.64
+;; Infinite loop introduced here
+(and (outranked-by ?middle-manager ?boss)
+     (supervisor ?staff-person ?middle-manager))
+
+;; 4.65
+;; Each path taken reports a separate result
+
+;; 4.68
+(rule (reverse? () ()))
+
+(rule (reverse? (?x . ?y) ?z)
+      (and (append-to-form ?u ?x ?z)
+           (reverse? ?u ?y)))
+
