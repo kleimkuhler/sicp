@@ -23,6 +23,7 @@
              (qeval q (singleton-stream '()))))
            (query-driver-loop)))))
 
+;; instantiate a frame by replacing pattern vars with bounded vars
 (define (instantiate exp frame unbound-var-handler)
   (define (copy exp)
     (cond ((var? exp)
@@ -35,12 +36,15 @@
           (else exp)))
   (copy exp))
 
+;; if query is not compound then simple
 (define (qeval query frame-stream)
   (let ((qproc (get (type query) 'qeval)))
     (if qproc
         (qproc (contents query) frame-stream)
         (simple-query query frame-stream))))
 
+;; return stream formed by extending each frame by all database matches of the
+;; query
 (define (simple-query query-pattern frame-stream)
   (stream-flatmap
    (lambda (frame)
@@ -49,12 +53,14 @@
       (delay (apply-rules query-pattern frame))))
    frame-stream))
 
+;; compound and
 (define (conjoin conjuncts frame-stream)
   (if (empty-conjunction? conjuncts)
       frame-stream
       (conjoin (rest-conjuncts conjuncts)
                (qeval (first-conjunct conjuncts) frame-stream))))
 
+;; compound or
 (define (disjoin disjuncts frame-stream)
   (if (empty-disjunction? disjuncts)
       the-empty-stream
@@ -62,6 +68,7 @@
        (qeval (first-disjunct disjuncts) frame-stream)
        (delay (disjoin (rest-disjuncts disjuncts) frame-stream)))))
 
+;; compound filters
 (define (negate operands frame-stream)
   (stream-flatmap
    (lambda (frame)
@@ -97,3 +104,32 @@
 (put 'not 'qeval negate)
 (put 'lisp-value 'qeval lisp-value)
 (put 'always-true 'qeval always-true)
+
+(define (find-assertions pattern frame)
+  (stream-flatmap
+   (lambda (datum) (check-an-assertion datum pattern frame))
+   (fetch-assertions pattern frame)))
+
+(define (check-an-assertion assertion query-pat query-frame)
+  (let ((match-result
+         (pattern-match query-pat assertion query-frame)))
+    (if (eq? match-result 'failed)
+        the-empty-stream
+        (singleton-stream match-result))))
+
+(define (pattern-match pat dat frame)
+  (cond ((eq? frame 'failed) 'failed)
+        ((equal? pat dat) frame)
+        ((var? pat) (extend-if-consistent pat dat frame))
+        ((and (pair? pat) (pair? dat))
+         (pattern-match
+          (cdr pat)
+          (cdr dat)
+          (pattern-match (car pat) (car dat) frame)))
+        (else 'failed)))
+
+(define (extend-if-consistent var dat frame)
+  (let ((binding (binding-in-frame var frame)))
+    (if binding
+        (pattern-match (binding-value binding) dat frame)
+        (extend var dat frame))))
